@@ -1,0 +1,15 @@
+{
+    "compilerOptions": {
+        "module": "commonjs",
+        "target": "es6",
+        "sourceMap": true,
+        "outDir": "lib",
+        "rootDir": "src"
+    },
+    "exclude": [
+        "lib",
+        "e2e",
+        "node_modules",
+        "test-workspace"
+    ]
+}

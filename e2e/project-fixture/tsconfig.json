@@ -1,0 +1,10 @@
+{
+  "compilerOptions": {
+    "target": "es2015",
+    "module": "commonjs",
+    "lib": [ ],
+    "plugins": [
+      { "name": "../../../lib", "tags": ["html"] }
+    ]
+  }
+}
