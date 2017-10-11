@@ -52,7 +52,8 @@ export default class HtmlTemplateLanguageService implements TemplateLanguageServ
     public getFormattingEditsForRange(
         context: TemplateContext,
         start: number,
-        end: number
+        end: number,
+        settings: ts.EditorSettings
     ): ts.TextChange[] {
         const doc = this.createVirtualDocument(context);
         const htmlDoc = this.htmlLanguageService.parseHTMLDocument(doc);
@@ -60,13 +61,13 @@ export default class HtmlTemplateLanguageService implements TemplateLanguageServ
         // Make sure we don't get rid of leading newline
         const leading = context.text.match(/^\s*\n/);
         if (leading) {
-            start += leading.length;
+            start += leading[0].length;
         }
-
+        this.logger.log(settings.convertTabsToSpaces)
         const range = this.toVsRange(context, start, end);
         const edits = this.htmlLanguageService.format(doc, range, {
-            tabSize: 4,
-            insertSpaces: true,
+            tabSize: settings.tabSize,
+            insertSpaces: !!settings.convertTabsToSpaces,
             wrapLineLength: 120,
             unformatted: '',
             contentUnformatted: 'pre,code,textarea',

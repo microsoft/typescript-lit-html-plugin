@@ -58,7 +58,7 @@ describe('Format', () => {
                 file: mockFileName,
                 line: 1,
                 offset: 1,
-                endLine: 2,
+                endLine: 99,
                 endOffset: 1
             }
         });
@@ -70,4 +70,44 @@ describe('Format', () => {
             assert.strictEqual(response.body[0].newText, '<span a="${123}">${123}</span>');
         });
     });
+
+    it('should observe document indent rules', () => {
+        const server = createServer();
+        openMockFile(server, mockFileName, [
+            'html\`',
+            '<div>',
+            '<img/>',
+            '</div>`',
+        ].join('\n'));
+        server.send({
+            command: 'configure',
+            arguments: {
+                file: mockFileName,
+                formatOptions: {
+                    tabSize: 2,
+                    indentSize: 2,
+                    convertTabsToSpaces: true,
+                    newLineCharacter: "\n",
+                },
+            }
+        });
+        server.send({
+            command: 'format',
+            arguments: {
+                file: mockFileName,
+                line: 1,
+                offset: 1,
+                endLine: 99,
+                endOffset: 1
+            }
+        });
+
+        return server.close().then(() => {
+            const response = getFirstResponseOfType('format', server);
+            assert.isTrue(response.success);
+            assert.strictEqual(response.body.length, 1);
+            assert.strictEqual(response.body[0].newText, '<div>\n  <img/>\n</div>');
+        });
+    });
+
 })
