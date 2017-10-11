@@ -6,6 +6,13 @@ TypeScript server plugin that adds intellisense for [lit-html](https://github.co
 
 [![Build Status](https://travis-ci.org/Microsoft/typescript-lit-html-plugin.svg?branch=master)](https://travis-ci.org/Microsoft/typescript-lit-html-plugin)
 
+**Features**
+
+- IntelliSense for html tags and attributes
+- Quick info hovers on tags
+- Formatting support
+- Works with literal html strings that contain placeholders
+
 ## Usage
 This plugin requires TypeScript 2.4 or later. It can provide intellisense in both JavaScript and TypeScript files within any editor that uses TypeScript to power their language features. This includes [VS Code](https://code.visualstudio.com), [Sublime with the TypeScript plugin](https://github.com/Microsoft/TypeScript-Sublime-Plugin), [Atom with the TypeScript plugin](https://atom.io/packages/atom-typescript), and others. 
 
@@ -122,6 +129,23 @@ You can enable IntelliSense for other tag names by configuring `"tags"`:
   }
 }
 ```
+
+### Formatting
+The plugin formats html code by default. You can disable this by setting `"format.emabled": false`
+
+```json
+{
+  "compilerOptions": {
+    "plugins": [
+      {
+        "name": "typescript-lit-html-plugin",
+        "format": { "enabled": false }
+      }
+    ]
+  }
+}
+```
+
 
 ## Contributing
 

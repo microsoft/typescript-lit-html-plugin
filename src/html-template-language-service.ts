@@ -55,6 +55,10 @@ export default class HtmlTemplateLanguageService implements TemplateLanguageServ
         end: number,
         settings: ts.EditorSettings
     ): ts.TextChange[] {
+        if (!this.configuration.format.enabled) {
+            return [];
+        }
+
         const doc = this.createVirtualDocument(context);
         const htmlDoc = this.htmlLanguageService.parseHTMLDocument(doc);
 

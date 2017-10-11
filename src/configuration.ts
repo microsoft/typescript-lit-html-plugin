@@ -3,14 +3,22 @@
 
 export interface TsHtmlPluginConfiguration {
     tags: string[];
+    format: {
+        enabled: boolean
+    };
 }
 
 export const defaultConfiguration: TsHtmlPluginConfiguration = {
     tags: ['html'],
+    format: {
+        enabled: true,
+    },
 };
 
 export const loadConfiguration = (config: any): TsHtmlPluginConfiguration => {
+    const format = Object.assign({}, defaultConfiguration.format, config.format);
     return {
         tags: config.tags || defaultConfiguration.tags,
+        format,
     };
 };
