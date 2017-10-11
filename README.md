@@ -169,8 +169,3 @@ Then [submit a pull request](https://help.github.com/articles/creating-a-pull-re
 ) against the Microsoft typescript-lit-html-plugin repository.
 
 Please also see our [Code of Conduct](CODE_OF_CONDUCT.md).
-
-
-## Credits
-
-Code originally forked from: https://github.com/Quramy/ts-graphql-plugin
