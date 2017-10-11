@@ -25,7 +25,7 @@ function create(info: ts.server.PluginCreateInfo): ts.LanguageService {
 
     logger.log('config: ' + JSON.stringify(config));
 
-    return decorateWithTemplateLanguageService(info.languageService, new HtmlTemplateLanguageService(config), {
+    return decorateWithTemplateLanguageService(info.languageService, new HtmlTemplateLanguageService(config, logger), {
         tags: config.tags,
         enableForStringWithSubstitutions: true,
         getSubstitution(
@@ -33,10 +33,7 @@ function create(info: ts.server.PluginCreateInfo): ts.LanguageService {
             start: number,
             end: number
         ): string {
-            const placeholder = templateString.slice(start, end);
-            const pre = templateString.slice(0, start);
-            const replacementChar = pre.match(/(^|\n)\s*$/g) ? ' ' : 'x';
-            return placeholder.replace(/./gm, c => c === '\n' ? '\n' : replacementChar);
+            return templateString.slice(start, end);
         },
     }, { logger });
 }

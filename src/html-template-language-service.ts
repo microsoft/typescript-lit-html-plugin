@@ -8,14 +8,15 @@ import { getLanguageService, LanguageService } from 'vscode-html-languageservice
 import * as vscode from 'vscode-languageserver-types';
 import * as config from './config';
 import { TsHtmlPluginConfiguration } from './configuration';
-import { TemplateLanguageService, TemplateContext } from 'typescript-template-language-service-decorator';
+import { TemplateLanguageService, TemplateContext, Logger } from 'typescript-template-language-service-decorator';
 
 export default class HtmlTemplateLanguageService implements TemplateLanguageService {
 
     private _htmlLanguageService?: LanguageService;
 
     constructor(
-        private readonly configuration: TsHtmlPluginConfiguration
+        private readonly configuration: TsHtmlPluginConfiguration,
+        private readonly logger: Logger
     ) { }
 
     private get htmlLanguageService(): LanguageService {
@@ -46,6 +47,58 @@ export default class HtmlTemplateLanguageService implements TemplateLanguageServ
             return this.translateHover(hover, position, context);
         }
         return undefined;
+    }
+
+    public getFormattingEditsForRange(
+        context: TemplateContext,
+        start: number,
+        end: number
+    ): ts.TextChange[] {
+        const doc = this.createVirtualDocument(context);
+        const htmlDoc = this.htmlLanguageService.parseHTMLDocument(doc);
+        const range = this.toVsRange(context, start, end);
+
+        const edits = this.htmlLanguageService.format(doc, range, { tabSize: 4, insertSpaces: true,
+        wrapLineLength: 120,
+        unformatted: '',
+        contentUnformatted: 'pre,code,textarea',
+        indentInnerHtml: false,
+        preserveNewLines: true,
+        maxPreserveNewLines: null,
+        indentHandlebars: false,
+        endWithNewline: false,
+        extraLiners: 'head, body, /html',
+        wrapAttributes: 'auto' });
+        return edits.map(vsedit => {
+            this.logger.log(vsedit.newText + '|' + doc.getText());
+            return {
+                span: this.toTsSpan(context, vsedit.range),
+                newText: vsedit.newText,
+            };
+        });
+    }
+
+    private toVsRange(
+        context: TemplateContext,
+        start: number,
+        end: number
+    ): vscode.Range {
+        return {
+            start: context.toPosition(start),
+            end: context.toPosition(end),
+        };
+    }
+
+    private toTsSpan(
+        context: TemplateContext,
+        range: vscode.Range
+    ): ts.TextSpan {
+        const editStart = context.toOffset(range.start);
+        const editEnd = context.toOffset(range.end);
+        return {
+            start: editStart,
+            length: editEnd - editStart,
+        };
     }
 
     private createVirtualDocument(
