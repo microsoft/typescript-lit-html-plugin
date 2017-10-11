@@ -63,7 +63,13 @@ export default class HtmlTemplateLanguageService implements TemplateLanguageServ
         if (leading) {
             start += leading[0].length;
         }
-        this.logger.log(settings.convertTabsToSpaces)
+
+        // or any trailing newlines
+        const trailing = context.text.match(/\n\s*$/);
+        if (trailing) {
+            end -= trailing[0].length;
+        }
+
         const range = this.toVsRange(context, start, end);
         const edits = this.htmlLanguageService.format(doc, range, {
             tabSize: settings.tabSize,
