@@ -56,21 +56,30 @@ export default class HtmlTemplateLanguageService implements TemplateLanguageServ
     ): ts.TextChange[] {
         const doc = this.createVirtualDocument(context);
         const htmlDoc = this.htmlLanguageService.parseHTMLDocument(doc);
-        const range = this.toVsRange(context, start, end);
 
-        const edits = this.htmlLanguageService.format(doc, range, { tabSize: 4, insertSpaces: true,
-        wrapLineLength: 120,
-        unformatted: '',
-        contentUnformatted: 'pre,code,textarea',
-        indentInnerHtml: false,
-        preserveNewLines: true,
-        maxPreserveNewLines: null,
-        indentHandlebars: false,
-        endWithNewline: false,
-        extraLiners: 'head, body, /html',
-        wrapAttributes: 'auto' });
+        // Make sure we don't get rid of leading newline
+        const leading = context.text.match(/^\s*\n/);
+        if (leading) {
+            start += leading.length;
+        }
+
+        const range = this.toVsRange(context, start, end);
+        const edits = this.htmlLanguageService.format(doc, range, {
+            tabSize: 4,
+            insertSpaces: true,
+            wrapLineLength: 120,
+            unformatted: '',
+            contentUnformatted: 'pre,code,textarea',
+            indentInnerHtml: false,
+            preserveNewLines: true,
+            maxPreserveNewLines: null,
+            indentHandlebars: false,
+            endWithNewline: false,
+            extraLiners: 'head, body, /html',
+            wrapAttributes: 'auto',
+        });
+
         return edits.map(vsedit => {
-            this.logger.log(vsedit.newText + '|' + doc.getText());
             return {
                 span: this.toTsSpan(context, vsedit.range),
                 newText: vsedit.newText,

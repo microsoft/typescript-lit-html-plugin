@@ -29,7 +29,7 @@ describe('Format', () => {
 
     it('should not remove leading whitespace', () => {
         const server = createServer();
-        openMockFile(server, mockFileName, 'html`\n<span />\n`\n');
+        openMockFile(server, mockFileName, 'html`\n<span />`\n');
         server.send({
             command: 'format',
             arguments: {
@@ -44,8 +44,30 @@ describe('Format', () => {
         return server.close().then(() => {
             const response = getFirstResponseOfType('format', server);
             assert.isTrue(response.success);
-            console.log(response.body)
-            assert.strictEqual(response.body.length, 0);
+            assert.strictEqual(response.body.length, 1);
+            assert.strictEqual(response.body[0].newText, '<span />');
+        });
+    });
+
+    it('should not touch placeholders', () => {
+        const server = createServer();
+        openMockFile(server, mockFileName, 'const q = html`<span a="${123}">${123}</span>`\n');
+        server.send({
+            command: 'format',
+            arguments: {
+                file: mockFileName,
+                line: 1,
+                offset: 1,
+                endLine: 2,
+                endOffset: 1
+            }
+        });
+
+        return server.close().then(() => {
+            const response = getFirstResponseOfType('format', server);
+            assert.isTrue(response.success);
+            assert.strictEqual(response.body.length, 1);
+            assert.strictEqual(response.body[0].newText, '<span a="${123}">${123}</span>');
         });
     });
 })
