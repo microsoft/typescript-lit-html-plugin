@@ -1,6 +1,6 @@
 {
   "name": "typescript-lit-html-plugin",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "TypeScript language service plugin that adds IntelliSense for html tagged templates",
   "keywords": [
     "TypeScript",
@@ -19,7 +19,7 @@
     "url": "https://github.com/Microsoft/typescript-lit-html-plugin/issues"
   },
   "dependencies": {
-    "typescript-template-language-service-decorator": "^0.1.1",
+    "typescript-template-language-service-decorator": "^0.1.2",
     "vscode-html-languageservice": "^2.0.10",
     "vscode-languageserver-types": "^3.4.0"
   },

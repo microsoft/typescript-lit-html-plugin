@@ -14,7 +14,7 @@ TypeScript server plugin that adds intellisense for [lit-html](https://github.co
 - Works with literal html strings that contain placeholders
 
 ## Usage
-This plugin requires TypeScript 2.4 or later. It can provide intellisense in both JavaScript and TypeScript files within any editor that uses TypeScript to power their language features. This includes [VS Code](https://code.visualstudio.com), [Sublime with the TypeScript plugin](https://github.com/Microsoft/TypeScript-Sublime-Plugin), [Atom with the TypeScript plugin](https://atom.io/packages/atom-typescript), and others. 
+This plugin requires TypeScript 2.4 or later. It can provide intellisense in both JavaScript and TypeScript files within any editor that uses TypeScript to power their language features. This includes [VS Code](https://code.visualstudio.com), [Sublime with the TypeScript plugin](https://github.com/Microsoft/TypeScript-Sublime-Plugin), [Atom with the TypeScript plugin](https://atom.io/packages/atom-typescript), [Visual Studio](https://www.visualstudio.com), and others. 
 
 ### With VS Code
 To use this plugin with VS Code, first install the plugin and a copy of TypeScript in your workspace:
@@ -97,6 +97,32 @@ Then add a `plugins` section to your [`tsconfig.json`](http://www.typescriptlang
 ```
 
 To get sytnax highlighting for lit-html strings in Atom, consider installing the [language-babel](https://atom.io/packages/language-babel) extension.
+
+
+### With Visual Studio
+This plugin works [Visual Studio 2017](https://www.visualstudio.com) using the TypeScript 2.5+ SDK.
+
+First install the plugin in your project:
+
+```bash
+npm install --save-dev ypescript-lit-html-plugin
+```
+
+Then add a `plugins` section to your [`tsconfig.json`](http://www.typescriptlang.org/docs/handbook/tsconfig-json.html).
+
+```json
+{
+  "compilerOptions": {
+    "plugins": [
+      {
+        "name": "typescript-lit-html-plugin"
+      }
+    ]
+  }
+}
+```
+
+Then reload your project to make sure the plugin has been loaded properly. Note that `jsconfig.json` projects are currently not supported in VS.
 
 
 ## Configuration
