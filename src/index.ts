@@ -19,25 +19,25 @@ class LanguageServiceLogger implements Logger {
     }
 }
 
-function create(info: ts.server.PluginCreateInfo): ts.LanguageService {
-    const logger = new LanguageServiceLogger(info);
-    const config = loadConfiguration(info.config);
-
-    logger.log('config: ' + JSON.stringify(config));
-
-    return decorateWithTemplateLanguageService(info.languageService, new HtmlTemplateLanguageService(config, logger), {
-        tags: config.tags,
-        enableForStringWithSubstitutions: true,
-        getSubstitution(
-            templateString: string,
-            start: number,
-            end: number
-        ): string {
-            return templateString.slice(start, end);
-        },
-    }, { logger });
-}
-
 export = (mod: { typescript: typeof ts }) => {
-    return { create };
+    return {
+        create(info: ts.server.PluginCreateInfo): ts.LanguageService {
+            const logger = new LanguageServiceLogger(info);
+            const config = loadConfiguration(info.config);
+
+            logger.log('config: ' + JSON.stringify(config));
+
+            return decorateWithTemplateLanguageService(mod.typescript, info.languageService, new HtmlTemplateLanguageService(config, logger), {
+                tags: config.tags,
+                enableForStringWithSubstitutions: true,
+                getSubstitution(
+                    templateString: string,
+                    start: number,
+                    end: number
+                ): string {
+                    return templateString.slice(start, end);
+                },
+            }, { logger });
+        },
+    };
 };
