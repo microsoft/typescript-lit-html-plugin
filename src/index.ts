@@ -27,7 +27,7 @@ export = (mod: { typescript: typeof ts }) => {
 
             logger.log('config: ' + JSON.stringify(config));
 
-            return decorateWithTemplateLanguageService(mod.typescript, info.languageService, new HtmlTemplateLanguageService(config, logger), {
+            return decorateWithTemplateLanguageService(mod.typescript, info.languageService, new HtmlTemplateLanguageService(mod.typescript, config, logger), {
                 tags: config.tags,
                 enableForStringWithSubstitutions: true,
                 getSubstitution(
