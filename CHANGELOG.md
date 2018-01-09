@@ -1,7 +1,10 @@
 # Changelog
 
-## 0.1.9 - January 9, 2018
-- Make sure we don't have a run time dep on TS for completion items
+## 0.1.1 - January 9, 2018
+- Also make sure we don't have a runtime dep on TS for hover.
+
+## 0.1.0 - January 9, 2018
+- Make sure we don't have a runtime dep on TS for completion items
 
 ## 0.0.3 - Novermber 30, 2017
 - Do not take run time dependency on TS.

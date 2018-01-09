@@ -159,7 +159,7 @@ export default class HtmlTemplateLanguageService implements TemplateLanguageServ
         convertPart(hover.contents);
         const start = context.toOffset(hover.range ? hover.range.start : position);
         return {
-            kind: ts.ScriptElementKind.unknown,
+            kind: this.typescript.ScriptElementKind.unknown,
             kindModifiers: '',
             textSpan: {
                 start,
@@ -191,7 +191,7 @@ function translateCompetionEntry(
     return {
         name: item.label,
         kindModifiers: '',
-        kind: item.kind ? translateionCompletionItemKind(typescript, item.kind) : ts.ScriptElementKind.unknown,
+        kind: item.kind ? translateionCompletionItemKind(typescript, item.kind) : typescript.ScriptElementKind.unknown,
         sortText: '0',
     };
 }
