@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.2.0 - January 11, 2018
+- Add completion entry details for tag completions.
+- Support `raw` tag by default as well.
+- Don't remove newlines in empty html block.
+
 ## 0.1.1 - January 9, 2018
 - Also make sure we don't have a runtime dep on TS for hover.
 

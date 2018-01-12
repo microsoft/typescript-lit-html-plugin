@@ -128,7 +128,7 @@ Then reload your project to make sure the plugin has been loaded properly. Note 
 ## Configuration
 
 ### Tags
-This plugin adds html IntelliSense to any template literal [tagged](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Template_literals) with `html`:
+This plugin adds html IntelliSense to any template literal [tagged](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Template_literals) with `html` or `raw`:
 
 ```js
 import {html} from 'lit-html'
