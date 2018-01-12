@@ -10,9 +10,49 @@ import * as config from './config';
 import { TsHtmlPluginConfiguration } from './configuration';
 import { TemplateLanguageService, TemplateContext, Logger } from 'typescript-template-language-service-decorator';
 
-export default class HtmlTemplateLanguageService implements TemplateLanguageService {
+function arePositionsEqual(
+    left: ts.LineAndCharacter,
+    right: ts.LineAndCharacter
+): boolean {
+    return left.line === right.line && left.character === right.character;
+}
 
+class CompletionsCache {
+    private _cachedCompletionsFile?: string;
+    private _cachedCompletionsPosition?: ts.LineAndCharacter;
+    private _cachedCompletionsContent?: string;
+    private _completions?: vscode.CompletionList;
+
+    public getCached(
+        context: TemplateContext,
+        position: ts.LineAndCharacter
+    ): vscode.CompletionList | undefined {
+        if (this._completions
+            && context.fileName === this._cachedCompletionsFile
+            && this._cachedCompletionsPosition && arePositionsEqual(position, this._cachedCompletionsPosition)
+            && context.text === this._cachedCompletionsContent
+        ) {
+            return this._completions;
+        }
+
+        return undefined;
+    }
+
+    public updateCached(
+        context: TemplateContext,
+        position: ts.LineAndCharacter,
+        completions: vscode.CompletionList
+    ) {
+        this._cachedCompletionsFile = context.fileName;
+        this._cachedCompletionsPosition = position;
+        this._cachedCompletionsContent = context.text;
+        this._completions = completions;
+    }
+}
+
+export default class HtmlTemplateLanguageService implements TemplateLanguageService {
     private _htmlLanguageService?: LanguageService;
+    private _completionsCache = new CompletionsCache();
 
     constructor(
         private readonly typescript: typeof ts,
@@ -31,10 +71,28 @@ export default class HtmlTemplateLanguageService implements TemplateLanguageServ
         context: TemplateContext,
         position: ts.LineAndCharacter
     ): ts.CompletionInfo {
-        const doc = this.createVirtualDocument(context);
-        const htmlDoc = this.htmlLanguageService.parseHTMLDocument(doc);
-        const items = this.htmlLanguageService.doComplete(doc, position, htmlDoc);
-        return translateCompletionItems(this.typescript, items);
+        const items = this.getCompletionItems(context, position);
+        return translateCompletionItemsToCompletionInfo(this.typescript, items);
+    }
+
+    public getCompletionEntryDetails?(
+        context: TemplateContext,
+        position: ts.LineAndCharacter,
+        name: string
+    ): ts.CompletionEntryDetails {
+        const items = this.getCompletionItems(context, position).items;
+        const item = items.find(x => x.label === name);
+        if (!item) {
+            return {
+                name,
+                kind: this.typescript.ScriptElementKind.unknown,
+                kindModifiers: '',
+                tags: [],
+                displayParts: toDisplayParts(name),
+                documentation: [],
+            };
+        }
+        return translateCompletionItemsToCompletionEntryDetails(this.typescript, item);
     }
 
     public getQuickInfoAtPosition(
@@ -141,6 +199,22 @@ export default class HtmlTemplateLanguageService implements TemplateLanguageServ
         };
     }
 
+    private getCompletionItems(
+        context: TemplateContext,
+        position: ts.LineAndCharacter
+    ): vscode.CompletionList {
+        const cached = this._completionsCache.getCached(context, position);
+        if (cached) {
+            return cached;
+        }
+
+        const doc = this.createVirtualDocument(context);
+        const htmlDoc = this.htmlLanguageService.parseHTMLDocument(doc);
+        const completions = this.htmlLanguageService.doComplete(doc, position, htmlDoc);
+        this._completionsCache.updateCached(context, position, completions);
+        return this.htmlLanguageService.doComplete(doc, position, htmlDoc);
+    }
+
     private translateHover(
         hover: vscode.Hover,
         position: ts.LineAndCharacter,
@@ -172,7 +246,7 @@ export default class HtmlTemplateLanguageService implements TemplateLanguageServ
     }
 }
 
-function translateCompletionItems(
+function translateCompletionItemsToCompletionInfo(
     typescript: typeof ts,
     items: vscode.CompletionList
 ): ts.CompletionInfo {
@@ -181,6 +255,20 @@ function translateCompletionItems(
         isMemberCompletion: false,
         isNewIdentifierLocation: false,
         entries: items.items.map(x => translateCompetionEntry(typescript, x)),
+    };
+}
+
+function translateCompletionItemsToCompletionEntryDetails(
+    typescript: typeof ts,
+    item: vscode.CompletionItem
+): ts.CompletionEntryDetails {
+    return {
+        name: item.label,
+        kindModifiers: 'declare',
+        kind: item.kind ? translateionCompletionItemKind(typescript, item.kind) : typescript.ScriptElementKind.unknown,
+        displayParts: toDisplayParts(item.detail),
+        documentation: toDisplayParts(item.documentation),
+        tags: [],
     };
 }
 
@@ -236,4 +324,10 @@ function translateionCompletionItemKind(
         default:
             return typescript.ScriptElementKind.unknown;
     }
+}
+
+function toDisplayParts(
+    text: string | undefined
+): ts.SymbolDisplayPart[] {
+    return text ? [{ text, kind: 'text' }] : [];
 }
