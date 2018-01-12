@@ -110,7 +110,7 @@ describe('Format', () => {
         });
     });
 
-    it('should not remove trailing newlinw', () => {
+    it('should not remove trailing newline', () => {
         const server = createServer();
         openMockFile(server, mockFileName, 'html`<span />\n`\n');
         server.send({
@@ -129,6 +129,28 @@ describe('Format', () => {
             assert.isTrue(response.success);
             assert.strictEqual(response.body.length, 1);
             assert.strictEqual(response.body[0].end.line, 1);
+        });
+    });
+
+
+    it('should not remove newline if that is the only content', () => {
+        const server = createServer();
+        openMockFile(server, mockFileName, 'html`\n`\n');
+        server.send({
+            command: 'format',
+            arguments: {
+                file: mockFileName,
+                line: 1,
+                offset: 1,
+                endLine: 99,
+                endOffset: 1
+            }
+        });
+
+        return server.close().then(() => {
+            const response = getFirstResponseOfType('format', server);
+            assert.isTrue(response.success);
+            assert.strictEqual(response.body.length, 0);
         });
     });
 })

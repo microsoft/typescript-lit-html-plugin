@@ -133,6 +133,10 @@ export default class HtmlTemplateLanguageService implements TemplateLanguageServ
             end -= trailing[0].length;
         }
 
+        if (end <= start) {
+            return [];
+        }
+
         const range = this.toVsRange(context, start, end);
         const edits = this.htmlLanguageService.format(doc, range, {
             tabSize: settings.tabSize,
