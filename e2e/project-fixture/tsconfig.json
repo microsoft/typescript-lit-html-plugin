@@ -2,9 +2,11 @@
   "compilerOptions": {
     "target": "es2015",
     "module": "commonjs",
-    "lib": [ ],
+    "lib": [],
     "plugins": [
-      { "name": "../../../lib", "tags": ["html"] }
+      {
+        "name": "../../../lib"
+      }
     ]
   }
 }

@@ -9,7 +9,7 @@ export interface TsHtmlPluginConfiguration {
 }
 
 export const defaultConfiguration: TsHtmlPluginConfiguration = {
-    tags: ['html'],
+    tags: ['html', 'raw'],
     format: {
         enabled: true,
     },
