@@ -254,7 +254,7 @@ export default class HtmlTemplateLanguageService implements TemplateLanguageServ
 
         const completions: vscode.CompletionList = {
             isIncomplete: false,
-            items: [...completionsCss.items, ...completionsHtml.items],
+            items: [...completionsHtml.items, ...completionsCss.items],
         };
 
         this._completionsCache.updateCached(context, position, completions);
@@ -371,6 +371,7 @@ function translateionCompletionItemKind(
             return typescript.ScriptElementKind.unknown;
     }
 }
+
 
 function toDisplayParts(
     text: string | vscode.MarkupContent | undefined
