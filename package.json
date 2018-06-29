@@ -1,6 +1,6 @@
 {
   "name": "typescript-lit-html-plugin",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "TypeScript language service plugin that adds IntelliSense for html tagged templates",
   "keywords": [
     "TypeScript",

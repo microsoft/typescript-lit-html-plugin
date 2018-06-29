@@ -1,5 +1,8 @@
 # Changelog
 
+## 0.3.0 - June 29, 2018
+- Added css IntelliSense inside of `<style>` tags. Thanks @justinribeiro!
+
 ## 0.2.0 - January 11, 2018
 - Add completion entry details for tag completions.
 - Support `raw` tag by default as well.
