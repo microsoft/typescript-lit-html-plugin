@@ -175,6 +175,14 @@ export default class HtmlTemplateLanguageService implements TemplateLanguageServ
         });
     }
 
+    public getSignatureHelpItemsAtPosition(
+        _context: TemplateContext,
+        _position: ts.LineAndCharacter
+    ) {
+        // Html does not support sig help
+        return undefined;
+    }
+
     private toVsRange(
         context: TemplateContext,
         start: number,
