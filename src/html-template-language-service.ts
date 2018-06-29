@@ -4,6 +4,7 @@
 // Original code forked from https://github.com/Quramy/ts-graphql-plugin
 
 import * as ts from 'typescript/lib/tsserverlibrary';
+import { getDocumentRegions } from './embeddedSupport';
 import { getLanguageService, LanguageService as htmlLanguageService } from 'vscode-html-languageservice';
 import { getCSSLanguageService, LanguageService as cssLanguageService } from 'vscode-css-languageservice';
 import * as vscode from 'vscode-languageserver-types';
@@ -244,18 +245,25 @@ export default class HtmlTemplateLanguageService implements TemplateLanguageServ
             return cached;
         }
 
-        const cssDoc = this.createCssVirtualDocument(context);
-        const stylesheet = this.cssLanguageService.parseStylesheet(cssDoc);
-        const completionsCss = this.cssLanguageService.doComplete(cssDoc, position, stylesheet) || emptyCompletionList;
-
         const htmlDoc = this.createVirtualDocument(context);
-        const html = this.htmlLanguageService.parseHTMLDocument(htmlDoc);
-        const completionsHtml = this.htmlLanguageService.doComplete(htmlDoc, position, html) || emptyCompletionList;
+        const documentRegions = getDocumentRegions(this.htmlLanguageService, htmlDoc);
+        const languageId = documentRegions.getLanguageAtPosition(position);
 
-        const completions: vscode.CompletionList = {
-            isIncomplete: false,
-            items: [...completionsHtml.items, ...completionsCss.items],
-        };
+        let completions: vscode.CompletionList;
+        switch (languageId) {
+            case 'html':
+                const html = this.htmlLanguageService.parseHTMLDocument(htmlDoc);
+                completions = this.htmlLanguageService.doComplete(htmlDoc, position, html) || emptyCompletionList;
+                break;
+            case 'css':
+                const cssDoc = this.createCssVirtualDocument(context);
+                const stylesheet = this.cssLanguageService.parseStylesheet(cssDoc);
+                completions = this.cssLanguageService.doComplete(cssDoc, position, stylesheet) || emptyCompletionList;
+                break;
+            default:
+                completions = emptyCompletionList;
+                break;
+        }
 
         this._completionsCache.updateCached(context, position, completions);
         return completions;
