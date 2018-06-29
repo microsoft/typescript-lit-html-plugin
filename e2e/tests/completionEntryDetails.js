@@ -1,14 +1,16 @@
+//@ts-check
+const path = require('path');
 const assert = require('chai').assert;
 const createServer = require('../server-fixture');
 const { openMockFile, getFirstResponseOfType } = require('./_helpers');
 
-const mockFileName = 'main.ts';
+const mockFileName = path.join(__dirname, '..', 'project-fixture', 'main.ts');
 
 describe('CompletionEntryDetails', () => {
     it('should return html details for tag completion', () => {
         const server = createServer();
         openMockFile(server, mockFileName, 'const q = html`<`');
-        server.send({ command: 'completionEntryDetails', arguments: { file: mockFileName, offset: 17, line: 1, entryNames: ['a'] } });
+        server.sendCommand('completionEntryDetails', { file: mockFileName, offset: 17, line: 1, entryNames: ['a'] });
 
         return server.close().then(() => {
             const completionsResponse = getFirstResponseOfType('completionEntryDetails', server);

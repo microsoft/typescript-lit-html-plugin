@@ -1,8 +1,10 @@
+//@ts-check
+const path = require('path');
 const assert = require('chai').assert;
 const createServer = require('../server-fixture');
 const { openMockFile, getFirstResponseOfType } = require('./_helpers');
 
-const mockFileName = 'main.ts';
+const mockFileName = path.join(__dirname, '..', 'project-fixture', 'main.ts');
 
 describe('HTML Completions', () => {
     it('should return html tag completions for html tag', () => {
@@ -126,7 +128,7 @@ describe('CSS Completions', () => {
 function makeSingleCompletionsRequest(body, position) {
     const server = createServer();
     openMockFile(server, mockFileName, body);
-    server.send({ command: 'completions', arguments: { file: mockFileName, line: position.line, offset: position.offset } });
+    server.sendCommand('completions', { file: mockFileName, line: position.line, offset: position.offset });
 
     return server.close().then(() => {
         const completionsResponse = getFirstResponseOfType('completions', server);
