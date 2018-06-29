@@ -380,7 +380,6 @@ function translateionCompletionItemKind(
     }
 }
 
-
 function toDisplayParts(
     text: string | vscode.MarkupContent | undefined
 ): ts.SymbolDisplayPart[] {
