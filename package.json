@@ -19,9 +19,10 @@
     "url": "https://github.com/Microsoft/typescript-lit-html-plugin/issues"
   },
   "dependencies": {
-    "typescript-template-language-service-decorator": "^1.1.0",
+    "typescript-template-language-service-decorator": "^1.2.0",
+    "vscode-css-languageservice": "^3.0.9-next.19",
     "vscode-html-languageservice": "^2.0.10",
-    "vscode-languageserver-types": "^3.4.0"
+    "vscode-languageserver-types": "^3.8.2"
   },
   "files": [
     "lib"

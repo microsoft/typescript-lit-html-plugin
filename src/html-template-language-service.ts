@@ -4,9 +4,10 @@
 // Original code forked from https://github.com/Quramy/ts-graphql-plugin
 
 import * as ts from 'typescript/lib/tsserverlibrary';
-import { getLanguageService, LanguageService } from 'vscode-html-languageservice';
+import { getDocumentRegions } from './embeddedSupport';
+import { getLanguageService, LanguageService as htmlLanguageService } from 'vscode-html-languageservice';
+import { getCSSLanguageService, LanguageService as cssLanguageService } from 'vscode-css-languageservice';
 import * as vscode from 'vscode-languageserver-types';
-import * as config from './config';
 import { TsHtmlPluginConfiguration } from './configuration';
 import { TemplateLanguageService, TemplateContext, Logger } from 'typescript-template-language-service-decorator';
 
@@ -16,6 +17,11 @@ function arePositionsEqual(
 ): boolean {
     return left.line === right.line && left.character === right.character;
 }
+
+const emptyCompletionList: vscode.CompletionList = {
+    isIncomplete: false,
+    items: [],
+};
 
 class CompletionsCache {
     private _cachedCompletionsFile?: string;
@@ -51,7 +57,8 @@ class CompletionsCache {
 }
 
 export default class HtmlTemplateLanguageService implements TemplateLanguageService {
-    private _htmlLanguageService?: LanguageService;
+    private _htmlLanguageService?: htmlLanguageService;
+    private _cssLanguageService?: cssLanguageService;
     private _completionsCache = new CompletionsCache();
 
     constructor(
@@ -60,11 +67,18 @@ export default class HtmlTemplateLanguageService implements TemplateLanguageServ
         private readonly logger: Logger
     ) { }
 
-    private get htmlLanguageService(): LanguageService {
+    private get htmlLanguageService(): htmlLanguageService {
         if (!this._htmlLanguageService) {
             this._htmlLanguageService = getLanguageService();
         }
         return this._htmlLanguageService;
+    }
+
+    private get cssLanguageService(): cssLanguageService {
+        if (!this._cssLanguageService) {
+            this._cssLanguageService = getCSSLanguageService();
+        }
+        return this._cssLanguageService;
     }
 
     public getCompletionsAtPosition(
@@ -203,6 +217,25 @@ export default class HtmlTemplateLanguageService implements TemplateLanguageServ
         };
     }
 
+    private createCssVirtualDocument(
+        context: TemplateContext
+    ): vscode.TextDocument {
+        const contents = context.text;
+        return {
+            uri: 'untitled://embedded.css',
+            languageId: 'css',
+            version: 1,
+            getText: () => contents,
+            positionAt: (offset: number) => {
+                return context.toPosition(offset);
+            },
+            offsetAt: (p: vscode.Position) => {
+                return context.toOffset(p);
+            },
+            lineCount: contents.split(/n/g).length + 1,
+        };
+    }
+
     private getCompletionItems(
         context: TemplateContext,
         position: ts.LineAndCharacter
@@ -212,11 +245,28 @@ export default class HtmlTemplateLanguageService implements TemplateLanguageServ
             return cached;
         }
 
-        const doc = this.createVirtualDocument(context);
-        const htmlDoc = this.htmlLanguageService.parseHTMLDocument(doc);
-        const completions = this.htmlLanguageService.doComplete(doc, position, htmlDoc);
+        const htmlDoc = this.createVirtualDocument(context);
+        const documentRegions = getDocumentRegions(this.htmlLanguageService, htmlDoc);
+        const languageId = documentRegions.getLanguageAtPosition(position);
+
+        let completions: vscode.CompletionList;
+        switch (languageId) {
+            case 'html':
+                const html = this.htmlLanguageService.parseHTMLDocument(htmlDoc);
+                completions = this.htmlLanguageService.doComplete(htmlDoc, position, html) || emptyCompletionList;
+                break;
+            case 'css':
+                const cssDoc = this.createCssVirtualDocument(context);
+                const stylesheet = this.cssLanguageService.parseStylesheet(cssDoc);
+                completions = this.cssLanguageService.doComplete(cssDoc, position, stylesheet) || emptyCompletionList;
+                break;
+            default:
+                completions = emptyCompletionList;
+                break;
+        }
+
         this._completionsCache.updateCached(context, position, completions);
-        return this.htmlLanguageService.doComplete(doc, position, htmlDoc);
+        return completions;
     }
 
     private translateHover(
@@ -331,7 +381,13 @@ function translateionCompletionItemKind(
 }
 
 function toDisplayParts(
-    text: string | undefined
+    text: string | vscode.MarkupContent | undefined
 ): ts.SymbolDisplayPart[] {
-    return text ? [{ text, kind: 'text' }] : [];
+    if (!text) {
+        return [];
+    }
+    return [{
+        kind: 'text',
+        text: typeof text === 'string' ? text : text.value,
+    }];
 }
