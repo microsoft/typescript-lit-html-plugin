@@ -64,7 +64,7 @@ export default class HtmlTemplateLanguageService implements TemplateLanguageServ
     constructor(
         private readonly typescript: typeof ts,
         private readonly configuration: TsHtmlPluginConfiguration,
-        private readonly logger: Logger
+        private readonly logger: Logger // tslint:disable-line
     ) { }
 
     private get htmlLanguageService(): htmlLanguageService {
@@ -133,8 +133,6 @@ export default class HtmlTemplateLanguageService implements TemplateLanguageServ
         }
 
         const doc = this.createVirtualDocument(context);
-        const htmlDoc = this.htmlLanguageService.parseHTMLDocument(doc);
-
         // Make sure we don't get rid of leading newline
         const leading = context.text.match(/^\s*\n/);
         if (leading) {

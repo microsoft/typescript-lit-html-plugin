@@ -27,7 +27,8 @@
       "functions": "never",
       "typeLiterals": "ignore"
     }}],
-    "max-line-length": false
+    "max-line-length": false,
+    "no-bitwise": false
   },
   "rulesDirectory": []
 }

@@ -4,8 +4,6 @@
  *--------------------------------------------------------------------------------------------*/
 // Original code forked from https://github.com/vscode-langservers/vscode-html-languageserver/
 
-'use strict';
-
 import {
     TextDocument,
     Position,
@@ -134,70 +132,6 @@ export function getDocumentRegions(
         getLanguageAtPosition: (position: Position) =>
             getLanguageAtPosition(document, regions, position),
     };
-}
-
-function getLanguageRanges(
-    document: TextDocument,
-    regions: EmbeddedRegion[],
-    range: Range
-): LanguageRange[] {
-    const result: LanguageRange[] = [];
-    let currentPos = range ? range.start : Position.create(0, 0);
-    let currentOffset = range ? document.offsetAt(range.start) : 0;
-    const endOffset = range
-        ? document.offsetAt(range.end)
-        : document.getText().length;
-    for (const region of regions) {
-        if (region.end > currentOffset && region.start < endOffset) {
-            const start = Math.max(region.start, currentOffset);
-            const startPos = document.positionAt(start);
-            if (currentOffset < region.start) {
-                result.push({
-                    start: currentPos,
-                    end: startPos,
-                    languageId: 'html',
-                });
-            }
-            const end = Math.min(region.end, endOffset);
-            const endPos = document.positionAt(end);
-            if (end > region.start) {
-                result.push({
-                    start: startPos,
-                    end: endPos,
-                    languageId: region.languageId,
-                    attributeValue: region.attributeValue,
-                });
-            }
-            currentOffset = end;
-            currentPos = endPos;
-        }
-    }
-    if (currentOffset < endOffset) {
-        const endPos = range ? range.end : document.positionAt(endOffset);
-        result.push({
-            start: currentPos,
-            end: endPos,
-            languageId: 'html',
-        });
-    }
-    return result;
-}
-
-function getLanguagesInDocument(
-    document: TextDocument,
-    regions: EmbeddedRegion[]
-): string[] {
-    const result = [];
-    for (const region of regions) {
-        if (region.languageId && result.indexOf(region.languageId) === -1) {
-            result.push(region.languageId);
-            if (result.length === 3) {
-                return result;
-            }
-        }
-    }
-    result.push('html');
-    return result;
 }
 
 function getLanguageAtPosition(
