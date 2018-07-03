@@ -1,5 +1,8 @@
 # Changelog
 
+## 0.4.0 - July 3, 2018
+- Added folding support.
+
 ## 0.3.1 - June 29, 2018
 - Don't return signature help inside html template strings.
 
