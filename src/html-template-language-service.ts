@@ -5,7 +5,7 @@
 
 import * as ts from 'typescript/lib/tsserverlibrary';
 import { getDocumentRegions } from './embeddedSupport';
-import { getLanguageService, LanguageService as htmlLanguageService } from 'vscode-html-languageservice';
+import { getLanguageService, LanguageService as htmlLanguageService, FoldingRange } from 'vscode-html-languageservice';
 import { getCSSLanguageService, LanguageService as cssLanguageService } from 'vscode-css-languageservice';
 import * as vscode from 'vscode-languageserver-types';
 import { TsHtmlPluginConfiguration } from './configuration';
@@ -183,6 +183,14 @@ export default class HtmlTemplateLanguageService implements TemplateLanguageServ
         return undefined;
     }
 
+    public getOutliningSpans(
+        context: TemplateContext
+    ): ts.OutliningSpan[] {
+        const doc = this.createVirtualDocument(context);
+        const ranges = this.htmlLanguageService.getFoldingRanges(doc);
+        return ranges.map(range => this.translateOutliningSpan(context, range));
+    }
+
     private toVsRange(
         context: TemplateContext,
         start: number,
@@ -304,6 +312,26 @@ export default class HtmlTemplateLanguageService implements TemplateLanguageServ
             displayParts: [],
             documentation: contents,
             tags: [],
+        };
+    }
+
+    private translateOutliningSpan(
+        context: TemplateContext,
+        range: FoldingRange
+    ): ts.OutliningSpan {
+        const startOffset = context.toOffset({ line: range.startLine, character: range.startCharacter || 0 });
+        const endOffset = context.toOffset({ line: range.endLine, character: range.endCharacter || 0 });
+        const span = {
+            start: startOffset,
+            length: endOffset - startOffset,
+        };
+
+        return {
+            autoCollapse: false,
+            kind: this.typescript.OutliningSpanKind.Code,
+            bannerText: '',
+            textSpan: span,
+            hintSpan: span,
         };
     }
 }
