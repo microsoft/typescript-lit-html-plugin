@@ -113,9 +113,26 @@ export default class HtmlTemplateLanguageService implements TemplateLanguageServ
         context: TemplateContext,
         position: ts.LineAndCharacter
     ): ts.QuickInfo | undefined {
-        const doc = this.createVirtualDocument(context);
-        const htmlDoc = this.htmlLanguageService.parseHTMLDocument(doc);
-        const hover = this.htmlLanguageService.doHover(doc, position, htmlDoc);
+        const htmlDoc = this.createVirtualDocument(context);
+        const documentRegions = getDocumentRegions(this.htmlLanguageService, htmlDoc);
+        const languageId = documentRegions.getLanguageAtPosition(position);
+
+        let hover: vscode.Hover;
+        switch (languageId) {
+            case 'html':
+                const html = this.htmlLanguageService.parseHTMLDocument(htmlDoc);
+                hover = this.htmlLanguageService.doHover(htmlDoc, position, html);
+                break;
+            case 'css':
+                const cssDoc = this.createCssVirtualDocument(context);
+                const stylesheet = this.cssLanguageService.parseStylesheet(cssDoc);
+                hover = this.cssLanguageService.doHover(cssDoc, position, stylesheet);
+                break;
+            default:
+                hover = undefined;
+                break;
+        }
+
         if (hover) {
             return this.translateHover(hover, position, context);
         }
