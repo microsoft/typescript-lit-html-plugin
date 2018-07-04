@@ -1,5 +1,8 @@
 # Changelog
 
+## 0.4.1 - July 3, 2018
+- Return css quickInfo inside styled blocks. Thanks @justinribeiro!
+
 ## 0.4.0 - July 3, 2018
 - Added folding support.
 
