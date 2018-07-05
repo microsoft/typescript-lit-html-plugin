@@ -134,7 +134,7 @@ export default class HtmlTemplateLanguageService implements TemplateLanguageServ
         }
 
         if (hover) {
-            return this.translateHover(hover, position, context);
+            return this.translateHover(hover, position, context, languageId);
         }
         return undefined;
     }
@@ -223,6 +223,7 @@ export default class HtmlTemplateLanguageService implements TemplateLanguageServ
     ): ts.TextSpan {
         const editStart = context.toOffset(range.start);
         const editEnd = context.toOffset(range.end);
+
         return {
             start: editStart,
             length: editEnd - editStart,
@@ -303,29 +304,42 @@ export default class HtmlTemplateLanguageService implements TemplateLanguageServ
     private translateHover(
         hover: vscode.Hover,
         position: ts.LineAndCharacter,
-        context: TemplateContext
+        context: TemplateContext,
+        languageId: string
     ): ts.QuickInfo {
-        const contents: ts.SymbolDisplayPart[] = [];
+        const header: ts.SymbolDisplayPart[] = [];
+        const docs: ts.SymbolDisplayPart[] = [];
         const convertPart = (hoverContents: typeof hover.contents) => {
             if (typeof hoverContents === 'string') {
-                contents.push({ kind: 'unknown', text: hoverContents });
+                docs.push({ kind: 'unknown', text: hoverContents});
             } else if (Array.isArray(hoverContents)) {
                 hoverContents.forEach(convertPart);
             } else {
-                contents.push({ kind: 'unknown', text: hoverContents.value });
+                if (languageId === 'css') {
+                    // When inside a <style> block and hovering over the first
+                    // property (i.e. <style> a.myclass { ... } ) the value
+                    // contains the <style> tag which looks very odd and is not
+                    // consistent with hovers in html/css files. We therefore
+                    // remove it and any additional spaces to give it a
+                    // consistent look and feel.
+                    const removeStyleDeclaration = hoverContents.value.replace(/(<style>\n)\s+/gi, '');
+                    header.push({ kind: 'unknown', text: removeStyleDeclaration });
+                } else {
+                    header.push({ kind: 'unknown', text: hoverContents.value });
+                }
             }
         };
         convertPart(hover.contents);
         const start = context.toOffset(hover.range ? hover.range.start : position);
         return {
-            kind: this.typescript.ScriptElementKind.unknown,
+            kind: this.typescript.ScriptElementKind.string,
             kindModifiers: '',
             textSpan: {
                 start,
                 length: hover.range ? context.toOffset(hover.range.end) - start : 1,
             },
-            displayParts: [],
-            documentation: contents,
+            displayParts: header,
+            documentation: docs,
             tags: [],
         };
     }
