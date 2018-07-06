@@ -10,18 +10,14 @@ import { getCSSLanguageService, LanguageService as cssLanguageService } from 'vs
 import * as vscode from 'vscode-languageserver-types';
 import { TsHtmlPluginConfiguration } from './configuration';
 import { TemplateLanguageService, TemplateContext, Logger } from 'typescript-template-language-service-decorator';
-
-function arePositionsEqual(
-    left: ts.LineAndCharacter,
-    right: ts.LineAndCharacter
-): boolean {
-    return left.line === right.line && left.character === right.character;
-}
+import { pluginName } from './config';
 
 const emptyCompletionList: vscode.CompletionList = {
     isIncomplete: false,
     items: [],
 };
+
+const cssErrorCode = 9999;
 
 class CompletionsCache {
     private _cachedCompletionsFile?: string;
@@ -206,6 +202,46 @@ export default class HtmlTemplateLanguageService implements TemplateLanguageServ
         return ranges.map(range => this.translateOutliningSpan(context, range));
     }
 
+    public getSemanticDiagnostics(
+        context: TemplateContext
+    ): ts.Diagnostic[] {
+        const doc = this.createVirtualDocument(context);
+        const documentRegions = getDocumentRegions(this.htmlLanguageService, doc);
+        const embeddedDoc = documentRegions.getEmbeddedDocument('css');
+
+        const stylesheet = this.cssLanguageService.parseStylesheet(embeddedDoc);
+        return this.translateDiagnostics(
+            this.cssLanguageService.doValidation(embeddedDoc, stylesheet),
+            doc,
+            context,
+            context.text).filter(x => !!x) as ts.Diagnostic[];
+    }
+
+    public getSupportedCodeFixes(): number[] {
+        return [cssErrorCode];
+    }
+
+    public getCodeFixesAtPosition(
+        context: TemplateContext,
+        start: number,
+        end: number,
+        errorCodes: number[],
+        format: ts.FormatCodeSettings
+    ): ts.CodeAction[] {
+        const range = this.toVsRange(context, start, end);
+        const doc = this.createVirtualDocument(context);
+        const documentRegions = getDocumentRegions(this.htmlLanguageService, doc);
+
+        const embeddedDoc = documentRegions.getEmbeddedDocument('css');
+        const stylesheet = this.cssLanguageService.parseStylesheet(embeddedDoc);
+        const diagnostics = this.cssLanguageService.doValidation(embeddedDoc, stylesheet)
+            .filter(diagnostic => overlaps(diagnostic.range, range));
+
+        return this.translateCodeActions(
+                context,
+                this.cssLanguageService.doCodeActions(doc, range, { diagnostics }, stylesheet));
+    }
+
     private toVsRange(
         context: TemplateContext,
         start: number,
@@ -363,6 +399,84 @@ export default class HtmlTemplateLanguageService implements TemplateLanguageServ
             hintSpan: span,
         };
     }
+
+    private translateTextEditToFileTextChange(
+        context: TemplateContext,
+        textEdit: vscode.TextEdit
+    ): ts.FileTextChanges {
+        const start = context.toOffset(textEdit.range.start);
+        const end = context.toOffset(textEdit.range.end);
+        return {
+            fileName: context.fileName,
+            textChanges: [{
+                newText: textEdit.newText,
+                span: {
+                    start,
+                    length: end - start,
+                },
+            }],
+        };
+    }
+
+    private translateCodeActions(
+        context: TemplateContext,
+        codeActions: vscode.Command[]
+    ): ts.CodeAction[] {
+        const actions: ts.CodeAction[] = [];
+        for (const vsAction of codeActions) {
+            if (vsAction.command !== '_css.applyCodeAction') {
+                continue;
+            }
+            const edits = vsAction.arguments && vsAction.arguments[2] as vscode.TextEdit[];
+            if (edits) {
+                actions.push({
+                    description: vsAction.title,
+                    changes: edits.map(edit => this.translateTextEditToFileTextChange(context, edit)),
+                });
+            }
+        }
+        return actions;
+    }
+
+    private translateDiagnostics(
+        diagnostics: vscode.Diagnostic[],
+        doc: vscode.TextDocument,
+        context: TemplateContext,
+        content: string
+    ) {
+        const sourceFile = context.node.getSourceFile();
+        return diagnostics.map(diag =>
+            this.translateDiagnostic(diag, sourceFile, doc, context, content));
+    }
+
+    private translateDiagnostic(
+        diagnostic: vscode.Diagnostic,
+        file: ts.SourceFile,
+        doc: vscode.TextDocument,
+        context: TemplateContext,
+        content: string
+    ): ts.Diagnostic | undefined {
+        // Make sure returned error is within the real document
+        if (diagnostic.range.start.line === 0
+            || diagnostic.range.start.line > doc.lineCount
+            || diagnostic.range.start.character >= content.length
+        ) {
+            return undefined;
+        }
+
+        const start = context.toOffset(diagnostic.range.start);
+        const length = context.toOffset(diagnostic.range.end) - start;
+        const code = typeof diagnostic.code === 'number' ? diagnostic.code : cssErrorCode;
+        return {
+            code,
+            messageText: diagnostic.message,
+            category: translateSeverity(this.typescript, diagnostic.severity),
+            file,
+            start,
+            length,
+            source: pluginName,
+        };
+    }
 }
 
 function translateCompletionItemsToCompletionInfo(
@@ -445,6 +559,24 @@ function translateionCompletionItemKind(
     }
 }
 
+function translateSeverity(
+    typescript: typeof ts,
+    severity: vscode.DiagnosticSeverity | undefined
+): ts.DiagnosticCategory {
+    switch (severity) {
+        case vscode.DiagnosticSeverity.Information:
+        case vscode.DiagnosticSeverity.Hint:
+            return typescript.DiagnosticCategory.Message;
+
+        case vscode.DiagnosticSeverity.Warning:
+            return typescript.DiagnosticCategory.Warning;
+
+        case vscode.DiagnosticSeverity.Error:
+        default:
+            return typescript.DiagnosticCategory.Error;
+    }
+}
+
 function toDisplayParts(
     text: string | vscode.MarkupContent | undefined
 ): ts.SymbolDisplayPart[] {
@@ -455,4 +587,25 @@ function toDisplayParts(
         kind: 'text',
         text: typeof text === 'string' ? text : text.value,
     }];
+}
+
+function arePositionsEqual(
+    left: ts.LineAndCharacter,
+    right: ts.LineAndCharacter
+): boolean {
+    return left.line === right.line && left.character === right.character;
+}
+
+function isAfter(
+    left: vscode.Position,
+    right: vscode.Position
+): boolean {
+    return right.line > left.line || (right.line === left.line && right.character >= left.character);
+}
+
+function overlaps(
+    a: vscode.Range,
+    b: vscode.Range
+): boolean {
+    return !isAfter(a.end, b.start) && !isAfter(b.end, a.start);
 }
