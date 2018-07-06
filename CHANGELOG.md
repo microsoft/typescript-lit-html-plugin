@@ -1,5 +1,8 @@
 # Changelog
 
+## 0.5.0 - July 6, 2018
+- Error reporting and quick fixes for css in style blocks. Thanks @justinribeiro!
+
 ## 0.4.2 - July 5, 2018
 - Use more consistent look for quick info hover. Thanks @justinribeiro!
 
