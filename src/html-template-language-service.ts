@@ -115,22 +115,16 @@ export default class HtmlTemplateLanguageService implements TemplateLanguageServ
         const documentRegions = getDocumentRegions(this.htmlLanguageService, htmlDoc);
         const languageId = documentRegions.getLanguageAtPosition(position);
 
-        let hover: vscode.Hover;
         switch (languageId) {
             case 'html':
                 const html = this.htmlLanguageService.parseHTMLDocument(htmlDoc);
-                hover = this.htmlLanguageService.doHover(htmlDoc, position, html);
-                break;
+                const hover = this.htmlLanguageService.doHover(htmlDoc, position, html);
+                return this.translateHover(hover, position, context, languageId);
+
             case 'css':
                 return this.styledLanguageService.getQuickInfoAtPosition(context, position);
-            default:
-                hover = undefined;
-                break;
         }
 
-        if (hover) {
-            return this.translateHover(hover, position, context, languageId);
-        }
         return undefined;
     }
 
@@ -302,18 +296,7 @@ export default class HtmlTemplateLanguageService implements TemplateLanguageServ
             } else if (Array.isArray(hoverContents)) {
                 hoverContents.forEach(convertPart);
             } else {
-                if (languageId === 'css') {
-                    // When inside a <style> block and hovering over the first
-                    // property (i.e. <style> a.myclass { ... } ) the value
-                    // contains the <style> tag which looks very odd and is not
-                    // consistent with hovers in html/css files. We therefore
-                    // remove it and any additional spaces to give it a
-                    // consistent look and feel.
-                    const removeStyleDeclaration = hoverContents.value.replace(/(<style>\n)\s+/gi, '');
-                    header.push({ kind: 'unknown', text: removeStyleDeclaration });
-                } else {
-                    header.push({ kind: 'unknown', text: hoverContents.value });
-                }
+                header.push({ kind: 'unknown', text: hoverContents.value });
             }
         };
         convertPart(hover.contents);
