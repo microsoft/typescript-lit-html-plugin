@@ -11,6 +11,7 @@ import * as vscode from 'vscode-languageserver-types';
 import { TsHtmlPluginConfiguration } from './configuration';
 import { TemplateLanguageService, TemplateContext, Logger } from 'typescript-template-language-service-decorator';
 import { pluginName } from './config';
+import { StyledTemplateLanguageService } from 'typescript-styled-plugin/lib/api';
 
 const emptyCompletionList: vscode.CompletionList = {
     isIncomplete: false,
@@ -60,6 +61,7 @@ export default class HtmlTemplateLanguageService implements TemplateLanguageServ
         private readonly typescript: typeof ts,
         private readonly configuration: TsHtmlPluginConfiguration,
         private readonly htmlLanguageService: HtmlLanguageService,
+        private readonly styledLanguageService: StyledTemplateLanguageService,
         private readonly logger: Logger // tslint:disable-line
     ) { }
 
@@ -198,16 +200,7 @@ export default class HtmlTemplateLanguageService implements TemplateLanguageServ
     public getSemanticDiagnostics(
         context: TemplateContext
     ): ts.Diagnostic[] {
-        const doc = this.createVirtualDocument(context);
-        const documentRegions = getDocumentRegions(this.htmlLanguageService, doc);
-        const embeddedDoc = documentRegions.getEmbeddedDocument('css');
-
-        const stylesheet = this.cssLanguageService.parseStylesheet(embeddedDoc);
-        return this.translateDiagnostics(
-            this.cssLanguageService.doValidation(embeddedDoc, stylesheet),
-            doc,
-            context,
-            context.text).filter(x => !!x) as ts.Diagnostic[];
+        return this.styledLanguageService.getSemanticDiagnostics(context);
     }
 
     public getSupportedCodeFixes(): number[] {
@@ -429,46 +422,6 @@ export default class HtmlTemplateLanguageService implements TemplateLanguageServ
             }
         }
         return actions;
-    }
-
-    private translateDiagnostics(
-        diagnostics: vscode.Diagnostic[],
-        doc: vscode.TextDocument,
-        context: TemplateContext,
-        content: string
-    ) {
-        const sourceFile = context.node.getSourceFile();
-        return diagnostics.map(diag =>
-            this.translateDiagnostic(diag, sourceFile, doc, context, content));
-    }
-
-    private translateDiagnostic(
-        diagnostic: vscode.Diagnostic,
-        file: ts.SourceFile,
-        doc: vscode.TextDocument,
-        context: TemplateContext,
-        content: string
-    ): ts.Diagnostic | undefined {
-        // Make sure returned error is within the real document
-        if (diagnostic.range.start.line === 0
-            || diagnostic.range.start.line > doc.lineCount
-            || diagnostic.range.start.character >= content.length
-        ) {
-            return undefined;
-        }
-
-        const start = context.toOffset(diagnostic.range.start);
-        const length = context.toOffset(diagnostic.range.end) - start;
-        const code = typeof diagnostic.code === 'number' ? diagnostic.code : cssErrorCode;
-        return {
-            code,
-            messageText: diagnostic.message,
-            category: translateSeverity(this.typescript, diagnostic.severity),
-            file,
-            start,
-            length,
-            source: pluginName,
-        };
     }
 }
 

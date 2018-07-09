@@ -10,7 +10,8 @@ import { pluginName } from './config';
 import { loadConfiguration } from './configuration';
 import { getSubstitutions } from './substitutions';
 import { getLanguageService } from 'vscode-html-languageservice';
-import { VirtualDocumentProvider } from './virtual-document-provider';
+import { VirtualDocumentProvider, CssDocumentProvider } from './virtual-document-provider';
+import { StyledTemplateLanguageService } from '../node_modules/typescript-styled-plugin/lib/api';
 
 class LanguageServiceLogger implements Logger {
     constructor(
@@ -33,7 +34,8 @@ export = (mod: { typescript: typeof ts }) => {
             const htmlLanguageService = getLanguageService();
             const provider = new VirtualDocumentProvider();
 
-            return decorateWithTemplateLanguageService(mod.typescript, info.languageService, new HtmlTemplateLanguageService(mod.typescript, config, htmlLanguageService, logger), {
+            const styledLanguageService = new StyledTemplateLanguageService(mod.typescript, {} as any, new CssDocumentProvider(htmlLanguageService), logger);
+            return decorateWithTemplateLanguageService(mod.typescript, info.languageService, new HtmlTemplateLanguageService(mod.typescript, config, htmlLanguageService, styledLanguageService, logger), {
                 tags: config.tags,
                 enableForStringWithSubstitutions: true,
                 getSubstitutions(templateString, spans): string {
