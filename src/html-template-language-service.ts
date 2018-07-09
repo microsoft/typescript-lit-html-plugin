@@ -11,6 +11,7 @@ import * as vscode from 'vscode-languageserver-types';
 import { TsHtmlPluginConfiguration } from './configuration';
 import { TemplateLanguageService, TemplateContext, Logger } from 'typescript-template-language-service-decorator';
 import { StyledTemplateLanguageService } from 'typescript-styled-plugin/lib/api';
+import { VirtualDocumentProvider } from './virtual-document-provider';
 
 const emptyCompletionList: vscode.CompletionList = {
     isIncomplete: false,
@@ -57,6 +58,7 @@ export default class HtmlTemplateLanguageService implements TemplateLanguageServ
     constructor(
         private readonly typescript: typeof ts,
         private readonly configuration: TsHtmlPluginConfiguration,
+        private readonly virtualDocumentProvider: VirtualDocumentProvider,
         private readonly htmlLanguageService: HtmlLanguageService,
         private readonly styledLanguageService: StyledTemplateLanguageService,
         private readonly logger: Logger // tslint:disable-line
@@ -101,7 +103,7 @@ export default class HtmlTemplateLanguageService implements TemplateLanguageServ
         context: TemplateContext,
         position: ts.LineAndCharacter
     ): ts.QuickInfo | undefined {
-        const htmlDoc = this.createVirtualDocument(context);
+        const htmlDoc = this.virtualDocumentProvider.createVirtualDocument(context);
         const documentRegions = getDocumentRegions(this.htmlLanguageService, htmlDoc);
         const languageId = documentRegions.getLanguageAtPosition(position);
 
@@ -134,7 +136,7 @@ export default class HtmlTemplateLanguageService implements TemplateLanguageServ
             return [];
         }
 
-        const doc = this.createVirtualDocument(context);
+        const doc = this.virtualDocumentProvider.createVirtualDocument(context);
         // Make sure we don't get rid of leading newline
         const leading = context.text.match(/^\s*\n/);
         if (leading) {
@@ -186,7 +188,7 @@ export default class HtmlTemplateLanguageService implements TemplateLanguageServ
     public getOutliningSpans(
         context: TemplateContext
     ): ts.OutliningSpan[] {
-        const doc = this.createVirtualDocument(context);
+        const doc = this.virtualDocumentProvider.createVirtualDocument(context);
         const ranges = this.htmlLanguageService.getFoldingRanges(doc);
         return ranges.map(range => this.translateOutliningSpan(context, range));
     }
@@ -235,25 +237,6 @@ export default class HtmlTemplateLanguageService implements TemplateLanguageServ
         };
     }
 
-    private createVirtualDocument(
-        context: TemplateContext
-    ): vscode.TextDocument {
-        const contents = context.text;
-        return {
-            uri: 'untitled://embedded.html',
-            languageId: 'html',
-            version: 1,
-            getText: () => contents,
-            positionAt: (offset: number) => {
-                return context.toPosition(offset);
-            },
-            offsetAt: (p: vscode.Position) => {
-                return context.toOffset(p);
-            },
-            lineCount: contents.split(/n/g).length + 1,
-        };
-    }
-
     private createCssVirtualDocument(
         context: TemplateContext
     ): vscode.TextDocument {
@@ -282,7 +265,7 @@ export default class HtmlTemplateLanguageService implements TemplateLanguageServ
             return cached;
         }
 
-        const htmlDoc = this.createVirtualDocument(context);
+        const htmlDoc = this.virtualDocumentProvider.createVirtualDocument(context);
         const documentRegions = getDocumentRegions(this.htmlLanguageService, htmlDoc);
         const languageId = documentRegions.getLanguageAtPosition(position);
 
