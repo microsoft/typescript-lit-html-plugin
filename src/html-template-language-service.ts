@@ -5,20 +5,17 @@
 
 import * as ts from 'typescript/lib/tsserverlibrary';
 import { getDocumentRegions } from './embeddedSupport';
-import { getLanguageService, LanguageService as HtmlLanguageService, FoldingRange } from 'vscode-html-languageservice';
+import { LanguageService as HtmlLanguageService, FoldingRange } from 'vscode-html-languageservice';
 import { getCSSLanguageService, LanguageService as cssLanguageService } from 'vscode-css-languageservice';
 import * as vscode from 'vscode-languageserver-types';
 import { TsHtmlPluginConfiguration } from './configuration';
 import { TemplateLanguageService, TemplateContext, Logger } from 'typescript-template-language-service-decorator';
-import { pluginName } from './config';
 import { StyledTemplateLanguageService } from 'typescript-styled-plugin/lib/api';
 
 const emptyCompletionList: vscode.CompletionList = {
     isIncomplete: false,
     items: [],
 };
-
-const cssErrorCode = 9999;
 
 class CompletionsCache {
     private _cachedCompletionsFile?: string;
@@ -115,10 +112,7 @@ export default class HtmlTemplateLanguageService implements TemplateLanguageServ
                 hover = this.htmlLanguageService.doHover(htmlDoc, position, html);
                 break;
             case 'css':
-                const cssDoc = this.createCssVirtualDocument(context);
-                const stylesheet = this.cssLanguageService.parseStylesheet(cssDoc);
-                hover = this.cssLanguageService.doHover(cssDoc, position, stylesheet);
-                break;
+                return this.styledLanguageService.getQuickInfoAtPosition(context, position);
             default:
                 hover = undefined;
                 break;
@@ -204,7 +198,7 @@ export default class HtmlTemplateLanguageService implements TemplateLanguageServ
     }
 
     public getSupportedCodeFixes(): number[] {
-        return [cssErrorCode];
+        return this.styledLanguageService.getSupportedCodeFixes();
     }
 
     public getCodeFixesAtPosition(
@@ -214,18 +208,7 @@ export default class HtmlTemplateLanguageService implements TemplateLanguageServ
         errorCodes: number[],
         format: ts.FormatCodeSettings
     ): ts.CodeAction[] {
-        const range = this.toVsRange(context, start, end);
-        const doc = this.createVirtualDocument(context);
-        const documentRegions = getDocumentRegions(this.htmlLanguageService, doc);
-
-        const embeddedDoc = documentRegions.getEmbeddedDocument('css');
-        const stylesheet = this.cssLanguageService.parseStylesheet(embeddedDoc);
-        const diagnostics = this.cssLanguageService.doValidation(embeddedDoc, stylesheet)
-            .filter(diagnostic => overlaps(diagnostic.range, range));
-
-        return this.translateCodeActions(
-                context,
-                this.cssLanguageService.doCodeActions(doc, range, { diagnostics }, stylesheet));
+        return this.styledLanguageService.getCodeFixesAtPosition(context, start, end, errorCodes, format);
     }
 
     private toVsRange(
@@ -402,26 +385,6 @@ export default class HtmlTemplateLanguageService implements TemplateLanguageServ
                 },
             }],
         };
-    }
-
-    private translateCodeActions(
-        context: TemplateContext,
-        codeActions: vscode.Command[]
-    ): ts.CodeAction[] {
-        const actions: ts.CodeAction[] = [];
-        for (const vsAction of codeActions) {
-            if (vsAction.command !== '_css.applyCodeAction') {
-                continue;
-            }
-            const edits = vsAction.arguments && vsAction.arguments[2] as vscode.TextEdit[];
-            if (edits) {
-                actions.push({
-                    description: vsAction.title,
-                    changes: edits.map(edit => this.translateTextEditToFileTextChange(context, edit)),
-                });
-            }
-        }
-        return actions;
     }
 }
 
