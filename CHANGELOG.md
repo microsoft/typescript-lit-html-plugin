@@ -1,5 +1,8 @@
 # Changelog
 
+## 0.5.2 - July 9, 2018
+- Remove TS as peerDep.
+
 ## 0.5.1 - July 9, 2018
 - Fixing false errors when using placeholders in style block.
 
