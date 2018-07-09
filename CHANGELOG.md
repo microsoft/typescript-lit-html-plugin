@@ -1,5 +1,8 @@
 # Changelog
 
+## 0.5.1 - July 9, 2018
+- Fixing false errors when using placeholders in style block.
+
 ## 0.5.0 - July 6, 2018
 - Error reporting and quick fixes for css in style blocks. Thanks @justinribeiro!
 
