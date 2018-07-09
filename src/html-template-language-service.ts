@@ -351,24 +351,6 @@ export default class HtmlTemplateLanguageService implements TemplateLanguageServ
             hintSpan: span,
         };
     }
-
-    private translateTextEditToFileTextChange(
-        context: TemplateContext,
-        textEdit: vscode.TextEdit
-    ): ts.FileTextChanges {
-        const start = context.toOffset(textEdit.range.start);
-        const end = context.toOffset(textEdit.range.end);
-        return {
-            fileName: context.fileName,
-            textChanges: [{
-                newText: textEdit.newText,
-                span: {
-                    start,
-                    length: end - start,
-                },
-            }],
-        };
-    }
 }
 
 function translateCompletionItemsToCompletionInfo(
@@ -451,24 +433,6 @@ function translateionCompletionItemKind(
     }
 }
 
-function translateSeverity(
-    typescript: typeof ts,
-    severity: vscode.DiagnosticSeverity | undefined
-): ts.DiagnosticCategory {
-    switch (severity) {
-        case vscode.DiagnosticSeverity.Information:
-        case vscode.DiagnosticSeverity.Hint:
-            return typescript.DiagnosticCategory.Message;
-
-        case vscode.DiagnosticSeverity.Warning:
-            return typescript.DiagnosticCategory.Warning;
-
-        case vscode.DiagnosticSeverity.Error:
-        default:
-            return typescript.DiagnosticCategory.Error;
-    }
-}
-
 function toDisplayParts(
     text: string | vscode.MarkupContent | undefined
 ): ts.SymbolDisplayPart[] {
@@ -486,18 +450,4 @@ function arePositionsEqual(
     right: ts.LineAndCharacter
 ): boolean {
     return left.line === right.line && left.character === right.character;
-}
-
-function isAfter(
-    left: vscode.Position,
-    right: vscode.Position
-): boolean {
-    return right.line > left.line || (right.line === left.line && right.character >= left.character);
-}
-
-function overlaps(
-    a: vscode.Range,
-    b: vscode.Range
-): boolean {
-    return !isAfter(a.end, b.start) && !isAfter(b.end, a.start);
 }
