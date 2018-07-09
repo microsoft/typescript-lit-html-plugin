@@ -111,15 +111,15 @@ export default class HtmlTemplateLanguageService implements TemplateLanguageServ
         context: TemplateContext,
         position: ts.LineAndCharacter
     ): ts.QuickInfo | undefined {
-        const htmlDoc = this.virtualDocumentProvider.createVirtualDocument(context);
-        const documentRegions = getDocumentRegions(this.htmlLanguageService, htmlDoc);
+        const document = this.virtualDocumentProvider.createVirtualDocument(context);
+        const documentRegions = getDocumentRegions(this.htmlLanguageService, document);
         const languageId = documentRegions.getLanguageAtPosition(position);
 
         switch (languageId) {
             case 'html':
-                const html = this.htmlLanguageService.parseHTMLDocument(htmlDoc);
-                const hover = this.htmlLanguageService.doHover(htmlDoc, position, html);
-                return this.translateHover(hover, position, context, languageId);
+                const htmlDoc = this.htmlLanguageService.parseHTMLDocument(document);
+                const hover = this.htmlLanguageService.doHover(document, position, htmlDoc);
+                return this.translateHover(hover, position, context);
 
             case 'css':
                 return this.styledLanguageService.getQuickInfoAtPosition(context, position);
@@ -138,7 +138,7 @@ export default class HtmlTemplateLanguageService implements TemplateLanguageServ
             return [];
         }
 
-        const doc = this.virtualDocumentProvider.createVirtualDocument(context);
+        const document = this.virtualDocumentProvider.createVirtualDocument(context, /*useRawText*/ true);
         // Make sure we don't get rid of leading newline
         const leading = context.text.match(/^\s*\n/);
         if (leading) {
@@ -156,12 +156,12 @@ export default class HtmlTemplateLanguageService implements TemplateLanguageServ
         }
 
         const range = this.toVsRange(context, start, end);
-        const edits = this.htmlLanguageService.format(doc, range, {
+        const edits = this.htmlLanguageService.format(document, range, {
             tabSize: settings.tabSize,
             insertSpaces: !!settings.convertTabsToSpaces,
             wrapLineLength: 120,
             unformatted: '',
-            contentUnformatted: 'pre,code,textarea',
+            contentUnformatted: 'pre,code,textarea,style',
             indentInnerHtml: false,
             preserveNewLines: true,
             maxPreserveNewLines: null,
@@ -190,8 +190,8 @@ export default class HtmlTemplateLanguageService implements TemplateLanguageServ
     public getOutliningSpans(
         context: TemplateContext
     ): ts.OutliningSpan[] {
-        const doc = this.virtualDocumentProvider.createVirtualDocument(context);
-        const ranges = this.htmlLanguageService.getFoldingRanges(doc);
+        const document = this.virtualDocumentProvider.createVirtualDocument(context);
+        const ranges = this.htmlLanguageService.getFoldingRanges(document);
         return ranges.map(range => this.translateOutliningSpan(context, range));
     }
 
@@ -248,17 +248,17 @@ export default class HtmlTemplateLanguageService implements TemplateLanguageServ
             return cached;
         }
 
-        const htmlDoc = this.virtualDocumentProvider.createVirtualDocument(context);
-        const documentRegions = getDocumentRegions(this.htmlLanguageService, htmlDoc);
+        const document = this.virtualDocumentProvider.createVirtualDocument(context);
+        const documentRegions = getDocumentRegions(this.htmlLanguageService, document);
         const languageId = documentRegions.getLanguageAtPosition(position);
 
         switch (languageId) {
             case 'html':
                 {
-                    const html = this.htmlLanguageService.parseHTMLDocument(htmlDoc);
+                    const htmlDoc = this.htmlLanguageService.parseHTMLDocument(document);
                     const htmlCompletions: HtmlCachedCompletionList = {
                         type: 'html',
-                        value: this.htmlLanguageService.doComplete(htmlDoc, position, html) || emptyCompletionList,
+                        value: this.htmlLanguageService.doComplete(document, position, htmlDoc) || emptyCompletionList,
                     };
                     this._completionsCache.updateCached(context, position, htmlCompletions);
                     return htmlCompletions;
@@ -285,8 +285,7 @@ export default class HtmlTemplateLanguageService implements TemplateLanguageServ
     private translateHover(
         hover: vscode.Hover,
         position: ts.LineAndCharacter,
-        context: TemplateContext,
-        languageId: string
+        context: TemplateContext
     ): ts.QuickInfo {
         const header: ts.SymbolDisplayPart[] = [];
         const docs: ts.SymbolDisplayPart[] = [];

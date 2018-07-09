@@ -8,11 +8,14 @@ import * as ts from 'typescript/lib/tsserverlibrary';
 class NoopTemplateContext implements TemplateContext {
 
     public readonly fileName = 'x.css';
+    public readonly rawText: string;
 
     constructor(
         public readonly typescript: typeof ts,
         public readonly text: string
-    ) { }
+    ) {
+        this.rawText = text;
+    }
 
     get node(): never {
         throw new Error('Not supported');

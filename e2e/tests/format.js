@@ -76,6 +76,21 @@ describe('Format', () => {
             assert.strictEqual(response.body.length, 0);
         });
     });
+
+    it('should preserve style block placeholders', async () => {
+        const response = await formatMockFile(
+            [
+                'html\`',
+                '<style>',
+                '${"a"} { }',
+                '</style>',
+                '`'
+            ].join('\n'))
+
+        assert.isTrue(response.success);
+        assert.strictEqual(response.body.length, 1);
+        assert.strictEqual(response.body[0].newText, '<style>\n${"a"} { }\n</style>');
+    });
 })
 
 function formatMockFile(contents, options) {

@@ -8,9 +8,10 @@ import { getDocumentRegions } from './embeddedSupport';
 
 export class VirtualDocumentProvider implements StyledVirtualDocumentProvider {
     public createVirtualDocument(
-        context: TemplateContext
+        context: TemplateContext,
+        useRawText: boolean = false
     ): vscode.TextDocument {
-        const contents = context.text;
+        const contents = useRawText ? context.rawText : context.text;
         return {
             uri: 'untitled://embedded.html',
             languageId: 'html',
