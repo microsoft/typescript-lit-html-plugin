@@ -3,15 +3,15 @@
 //
 // Original code forked from https://github.com/Quramy/ts-graphql-plugin
 
+import { StyledTemplateLanguageService } from 'typescript-styled-plugin/lib/api';
+import { decorateWithTemplateLanguageService, Logger, TemplateSettings } from 'typescript-template-language-service-decorator';
 import * as ts from 'typescript/lib/tsserverlibrary';
-import HtmlTemplateLanguageService from './html-template-language-service';
-import { decorateWithTemplateLanguageService, Logger } from 'typescript-template-language-service-decorator';
+import { getLanguageService, LanguageService as HtmlLanguageService } from 'vscode-html-languageservice';
 import { pluginName } from './config';
-import { loadConfiguration } from './configuration';
+import { loadConfiguration, TsHtmlPluginConfiguration } from './configuration';
+import HtmlTemplateLanguageService from './html-template-language-service';
 import { getSubstitutions } from './substitutions';
-import { getLanguageService } from 'vscode-html-languageservice';
-import { VirtualDocumentProvider, CssDocumentProvider } from './virtual-document-provider';
-import { StyledTemplateLanguageService } from '../node_modules/typescript-styled-plugin/lib/api';
+import { CssDocumentProvider, VirtualDocumentProvider } from './virtual-document-provider';
 
 class LanguageServiceLogger implements Logger {
     constructor(
@@ -23,25 +23,51 @@ class LanguageServiceLogger implements Logger {
     }
 }
 
-export = (mod: { typescript: typeof ts }) => {
-    return {
-        create(info: ts.server.PluginCreateInfo): ts.LanguageService {
-            const logger = new LanguageServiceLogger(info);
-            const config = loadConfiguration(info.config);
+class HtmlPlugin {
+    private readonly _virtualDocumentProvider = new VirtualDocumentProvider();
 
-            logger.log('config: ' + JSON.stringify(config));
+    private _htmlLanguageService?: HtmlLanguageService;
 
-            const htmlLanguageService = getLanguageService();
-            const provider = new VirtualDocumentProvider();
+    public constructor(
+        private readonly _typescript: typeof ts
+    ) { }
 
-            const styledLanguageService = new StyledTemplateLanguageService(mod.typescript, {} as any, new CssDocumentProvider(htmlLanguageService), logger);
-            return decorateWithTemplateLanguageService(mod.typescript, info.languageService, new HtmlTemplateLanguageService(mod.typescript, config, provider, htmlLanguageService, styledLanguageService, logger), {
-                tags: config.tags,
-                enableForStringWithSubstitutions: true,
-                getSubstitutions(templateString, spans): string {
-                    return getSubstitutions(mod.typescript, htmlLanguageService, provider, templateString, spans);
-                },
-            }, { logger });
-        },
-    };
-};
+    public create(info: ts.server.PluginCreateInfo): ts.LanguageService {
+        const logger = new LanguageServiceLogger(info);
+        const config = loadConfiguration(info.config);
+
+        logger.log('config: ' + JSON.stringify(config));
+
+        const styledLanguageService = new StyledTemplateLanguageService(this._typescript, {} as any, new CssDocumentProvider(this.htmlLanguageService), logger);
+
+        return decorateWithTemplateLanguageService(
+            this._typescript,
+            info.languageService,
+            new HtmlTemplateLanguageService(this._typescript, config, this._virtualDocumentProvider, this.htmlLanguageService, styledLanguageService, logger),
+            this.getTemplateSettings(config, this._virtualDocumentProvider),
+            { logger });
+    }
+
+    private get htmlLanguageService(): HtmlLanguageService {
+        if (!this._htmlLanguageService) {
+            this._htmlLanguageService = getLanguageService();
+        }
+        return this._htmlLanguageService;
+    }
+
+    private getTemplateSettings(
+        config: TsHtmlPluginConfiguration,
+        provider: VirtualDocumentProvider
+    ): TemplateSettings {
+        return {
+            tags: config.tags,
+            enableForStringWithSubstitutions: true,
+            getSubstitutions: (templateString, spans): string => {
+                return getSubstitutions(this._typescript, this.htmlLanguageService, provider, templateString, spans);
+            },
+        };
+    }
+}
+
+export = (mod: { typescript: typeof ts }) =>
+    new HtmlPlugin(mod.typescript);
