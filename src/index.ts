@@ -38,12 +38,23 @@ class HtmlPlugin {
 
         logger.log('config: ' + JSON.stringify(config));
 
-        const styledLanguageService = new StyledTemplateLanguageService(this._typescript, {} as any, new CssDocumentProvider(this.htmlLanguageService), logger);
+        const styledLanguageService = new StyledTemplateLanguageService(
+            this._typescript, {} as any,
+            new CssDocumentProvider(this.htmlLanguageService),
+            logger);
+
+        const htmlTemplateLanguageService = new HtmlTemplateLanguageService(
+            this._typescript,
+            config,
+            this._virtualDocumentProvider,
+            this.htmlLanguageService,
+            styledLanguageService,
+            logger);
 
         return decorateWithTemplateLanguageService(
             this._typescript,
             info.languageService,
-            new HtmlTemplateLanguageService(this._typescript, config, this._virtualDocumentProvider, this.htmlLanguageService, styledLanguageService, logger),
+            htmlTemplateLanguageService,
             this.getTemplateSettings(config, this._virtualDocumentProvider),
             { logger });
     }
