@@ -3,14 +3,13 @@
 //
 // Original code forked from https://github.com/Quramy/ts-graphql-plugin
 
+import { StyledTemplateLanguageService } from 'typescript-styled-plugin/lib/api';
+import { Logger, TemplateContext, TemplateLanguageService } from 'typescript-template-language-service-decorator';
 import * as ts from 'typescript/lib/tsserverlibrary';
-import { getDocumentRegions } from './embeddedSupport';
-import { LanguageService as HtmlLanguageService, FoldingRange } from 'vscode-html-languageservice';
-import { getCSSLanguageService, LanguageService as cssLanguageService } from 'vscode-css-languageservice';
+import { FoldingRange, LanguageService as HtmlLanguageService } from 'vscode-html-languageservice';
 import * as vscode from 'vscode-languageserver-types';
 import { TsHtmlPluginConfiguration } from './configuration';
-import { TemplateLanguageService, TemplateContext, Logger } from 'typescript-template-language-service-decorator';
-import { StyledTemplateLanguageService } from 'typescript-styled-plugin/lib/api';
+import { getDocumentRegions } from './embeddedSupport';
 import { VirtualDocumentProvider } from './virtual-document-provider';
 
 const emptyCompletionList: vscode.CompletionList = {
@@ -18,16 +17,26 @@ const emptyCompletionList: vscode.CompletionList = {
     items: [],
 };
 
+interface HtmlCachedCompletionList {
+    type: 'html';
+    value: vscode.CompletionList;
+}
+
+interface StyledCachedCompletionList {
+    type: 'styled';
+    value: ts.CompletionInfo;
+}
+
 class CompletionsCache {
     private _cachedCompletionsFile?: string;
     private _cachedCompletionsPosition?: ts.LineAndCharacter;
     private _cachedCompletionsContent?: string;
-    private _completions?: vscode.CompletionList;
+    private _completions?: HtmlCachedCompletionList | StyledCachedCompletionList;
 
     public getCached(
         context: TemplateContext,
         position: ts.LineAndCharacter
-    ): vscode.CompletionList | undefined {
+    ): HtmlCachedCompletionList | StyledCachedCompletionList | undefined {
         if (this._completions
             && context.fileName === this._cachedCompletionsFile
             && this._cachedCompletionsPosition && arePositionsEqual(position, this._cachedCompletionsPosition)
@@ -42,7 +51,7 @@ class CompletionsCache {
     public updateCached(
         context: TemplateContext,
         position: ts.LineAndCharacter,
-        completions: vscode.CompletionList
+        completions: HtmlCachedCompletionList | StyledCachedCompletionList
     ) {
         this._cachedCompletionsFile = context.fileName;
         this._cachedCompletionsPosition = position;
@@ -52,7 +61,6 @@ class CompletionsCache {
 }
 
 export default class HtmlTemplateLanguageService implements TemplateLanguageService {
-    private _cssLanguageService?: cssLanguageService;
     private _completionsCache = new CompletionsCache();
 
     constructor(
@@ -61,22 +69,18 @@ export default class HtmlTemplateLanguageService implements TemplateLanguageServ
         private readonly virtualDocumentProvider: VirtualDocumentProvider,
         private readonly htmlLanguageService: HtmlLanguageService,
         private readonly styledLanguageService: StyledTemplateLanguageService,
-        private readonly logger: Logger // tslint:disable-line
+        private readonly _logger: Logger // tslint:disable-line
     ) { }
-
-    private get cssLanguageService(): cssLanguageService {
-        if (!this._cssLanguageService) {
-            this._cssLanguageService = getCSSLanguageService();
-        }
-        return this._cssLanguageService;
-    }
 
     public getCompletionsAtPosition(
         context: TemplateContext,
         position: ts.LineAndCharacter
     ): ts.CompletionInfo {
-        const items = this.getCompletionItems(context, position);
-        return translateCompletionItemsToCompletionInfo(this.typescript, items);
+        const entry = this.getCompletionItems(context, position);
+        if (entry.type === 'styled') {
+            return entry.value;
+        }
+        return translateCompletionItemsToCompletionInfo(this.typescript, entry.value);
     }
 
     public getCompletionEntryDetails?(
@@ -84,8 +88,12 @@ export default class HtmlTemplateLanguageService implements TemplateLanguageServ
         position: ts.LineAndCharacter,
         name: string
     ): ts.CompletionEntryDetails {
-        const items = this.getCompletionItems(context, position).items;
-        const item = items.find(x => x.label === name);
+        const entry = this.getCompletionItems(context, position);
+        if (entry.type === 'styled') {
+            return this.styledLanguageService.getCompletionEntryDetails(context, position, name);
+        }
+
+        const item = entry.value.items.find(x => x.label === name);
         if (!item) {
             return {
                 name,
@@ -237,29 +245,10 @@ export default class HtmlTemplateLanguageService implements TemplateLanguageServ
         };
     }
 
-    private createCssVirtualDocument(
-        context: TemplateContext
-    ): vscode.TextDocument {
-        const contents = context.text;
-        return {
-            uri: 'untitled://embedded.css',
-            languageId: 'css',
-            version: 1,
-            getText: () => contents,
-            positionAt: (offset: number) => {
-                return context.toPosition(offset);
-            },
-            offsetAt: (p: vscode.Position) => {
-                return context.toOffset(p);
-            },
-            lineCount: contents.split(/n/g).length + 1,
-        };
-    }
-
     private getCompletionItems(
         context: TemplateContext,
         position: ts.LineAndCharacter
-    ): vscode.CompletionList {
+    ): HtmlCachedCompletionList | StyledCachedCompletionList {
         const cached = this._completionsCache.getCached(context, position);
         if (cached) {
             return cached;
@@ -269,22 +258,32 @@ export default class HtmlTemplateLanguageService implements TemplateLanguageServ
         const documentRegions = getDocumentRegions(this.htmlLanguageService, htmlDoc);
         const languageId = documentRegions.getLanguageAtPosition(position);
 
-        let completions: vscode.CompletionList;
         switch (languageId) {
             case 'html':
-                const html = this.htmlLanguageService.parseHTMLDocument(htmlDoc);
-                completions = this.htmlLanguageService.doComplete(htmlDoc, position, html) || emptyCompletionList;
-                break;
+                {
+                    const html = this.htmlLanguageService.parseHTMLDocument(htmlDoc);
+                    const htmlCompletions: HtmlCachedCompletionList = {
+                        type: 'html',
+                        value: this.htmlLanguageService.doComplete(htmlDoc, position, html) || emptyCompletionList,
+                    };
+                    this._completionsCache.updateCached(context, position, htmlCompletions);
+                    return htmlCompletions;
+                }
             case 'css':
-                const cssDoc = this.createCssVirtualDocument(context);
-                const stylesheet = this.cssLanguageService.parseStylesheet(cssDoc);
-                completions = this.cssLanguageService.doComplete(cssDoc, position, stylesheet) || emptyCompletionList;
-                break;
-            default:
-                completions = emptyCompletionList;
-                break;
+                {
+                    const styledCompletions: StyledCachedCompletionList = {
+                        type: 'styled',
+                        value: this.styledLanguageService.getCompletionsAtPosition(context, position),
+                    };
+                    this._completionsCache.updateCached(context, position, styledCompletions);
+                    return styledCompletions;
+                }
         }
 
+        const completions: HtmlCachedCompletionList = {
+            type: 'html',
+            value: emptyCompletionList,
+        };
         this._completionsCache.updateCached(context, position, completions);
         return completions;
     }
@@ -299,7 +298,7 @@ export default class HtmlTemplateLanguageService implements TemplateLanguageServ
         const docs: ts.SymbolDisplayPart[] = [];
         const convertPart = (hoverContents: typeof hover.contents) => {
             if (typeof hoverContents === 'string') {
-                docs.push({ kind: 'unknown', text: hoverContents});
+                docs.push({ kind: 'unknown', text: hoverContents });
             } else if (Array.isArray(hoverContents)) {
                 hoverContents.forEach(convertPart);
             } else {
