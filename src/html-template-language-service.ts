@@ -5,7 +5,7 @@
 
 import * as ts from 'typescript/lib/tsserverlibrary';
 import { getDocumentRegions } from './embeddedSupport';
-import { getLanguageService, LanguageService as htmlLanguageService, FoldingRange } from 'vscode-html-languageservice';
+import { getLanguageService, LanguageService as HtmlLanguageService, FoldingRange } from 'vscode-html-languageservice';
 import { getCSSLanguageService, LanguageService as cssLanguageService } from 'vscode-css-languageservice';
 import * as vscode from 'vscode-languageserver-types';
 import { TsHtmlPluginConfiguration } from './configuration';
@@ -53,22 +53,15 @@ class CompletionsCache {
 }
 
 export default class HtmlTemplateLanguageService implements TemplateLanguageService {
-    private _htmlLanguageService?: htmlLanguageService;
     private _cssLanguageService?: cssLanguageService;
     private _completionsCache = new CompletionsCache();
 
     constructor(
         private readonly typescript: typeof ts,
         private readonly configuration: TsHtmlPluginConfiguration,
+        private readonly htmlLanguageService: HtmlLanguageService,
         private readonly logger: Logger // tslint:disable-line
     ) { }
-
-    private get htmlLanguageService(): htmlLanguageService {
-        if (!this._htmlLanguageService) {
-            this._htmlLanguageService = getLanguageService();
-        }
-        return this._htmlLanguageService;
-    }
 
     private get cssLanguageService(): cssLanguageService {
         if (!this._cssLanguageService) {

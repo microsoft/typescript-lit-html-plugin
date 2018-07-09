@@ -33,7 +33,7 @@ export = (mod: { typescript: typeof ts }) => {
             const htmlLanguageService = getLanguageService();
             const provider = new VirtualDocumentProvider();
 
-            return decorateWithTemplateLanguageService(mod.typescript, info.languageService, new HtmlTemplateLanguageService(mod.typescript, config, logger), {
+            return decorateWithTemplateLanguageService(mod.typescript, info.languageService, new HtmlTemplateLanguageService(mod.typescript, config, htmlLanguageService, logger), {
                 tags: config.tags,
                 enableForStringWithSubstitutions: true,
                 getSubstitutions(templateString, spans): string {
