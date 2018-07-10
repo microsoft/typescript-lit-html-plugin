@@ -138,7 +138,18 @@ export default class HtmlTemplateLanguageService implements TemplateLanguageServ
             return [];
         }
 
-        const document = this.virtualDocumentProvider.createVirtualDocument(context, /*useRawText*/ true);
+        // Disable formatting for blocks that contain a style tag
+        //
+        // Formatting styled blocks gets complex since we want to preserve interpolations inside the output
+        // but we can't format content with `{` property.
+        // The best fix would be to add `style` to `contentUnformatted` but
+        // https://github.com/Microsoft/vscode-html-languageservice/issues/29 is causing problems and I'm not sure how
+        // to work around it well
+        if (context.text.match(/<style/g)) {
+            return [];
+        }
+
+        const document = this.virtualDocumentProvider.createVirtualDocument(context);
         // Make sure we don't get rid of leading newline
         const leading = context.text.match(/^\s*\n/);
         if (leading) {
@@ -161,7 +172,7 @@ export default class HtmlTemplateLanguageService implements TemplateLanguageServ
             insertSpaces: !!settings.convertTabsToSpaces,
             wrapLineLength: 120,
             unformatted: '',
-            contentUnformatted: 'pre,code,textarea,style',
+            contentUnformatted: 'pre,code,textarea',
             indentInnerHtml: false,
             preserveNewLines: true,
             maxPreserveNewLines: null,

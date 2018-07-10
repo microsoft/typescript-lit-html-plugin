@@ -24,6 +24,7 @@ describe('Format', () => {
             assert.isTrue(response.success);
             assert.strictEqual(response.body.length, 1);
             assert.strictEqual(response.body[0].newText, '<span />');
+            assert.strictEqual(response.body[0].newText, '<span />');
         });
     });
 
@@ -77,6 +78,22 @@ describe('Format', () => {
         });
     });
 
+    it('should not format contents of style blocks', async () => {
+        const response = await formatMockFile(
+            [
+                'html\`',
+                '    <style>',
+                'a { }',
+                '</style>',
+                '`'
+            ].join('\n'))
+
+        assert.isTrue(response.success);
+        assert.strictEqual(response.body.length, 0);
+        // assert.strictEqual(response.body.length, 1);
+        // assert.strictEqual(response.body[0].newText, '     <style>\na { }\n</style>');
+    });
+
     it('should preserve style block placeholders', async () => {
         const response = await formatMockFile(
             [
@@ -88,8 +105,9 @@ describe('Format', () => {
             ].join('\n'))
 
         assert.isTrue(response.success);
-        assert.strictEqual(response.body.length, 1);
-        assert.strictEqual(response.body[0].newText, '<style>\n${"a"} { }\n</style>');
+        assert.strictEqual(response.body.length, 0);
+        // assert.strictEqual(response.body.length, 1);
+        // assert.strictEqual(response.body[0].newText, '<style>\n${"a"} { }\n</style>');
     });
 })
 
