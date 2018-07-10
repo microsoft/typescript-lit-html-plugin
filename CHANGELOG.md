@@ -1,5 +1,8 @@
 # Changelog
 
+## 0.5.3 - July 9, 2018
+- Disable formatting in html that contains a style block. There is an annoying bug that may corrupt the html when running format on these blocks. Better to disable formatting in them for now. 
+
 ## 0.5.2 - July 9, 2018
 - Remove TS as peerDep.
 
