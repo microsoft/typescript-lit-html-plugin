@@ -105,7 +105,7 @@ This plugin works [Visual Studio 2017](https://www.visualstudio.com) using the T
 First install the plugin in your project:
 
 ```bash
-npm install --save-dev ypescript-lit-html-plugin
+npm install --save-dev typescript-lit-html-plugin
 ```
 
 Then add a `plugins` section to your [`tsconfig.json`](http://www.typescriptlang.org/docs/handbook/tsconfig-json.html).
