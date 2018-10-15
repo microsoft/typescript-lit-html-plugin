@@ -1,5 +1,8 @@
 # Changelog
 
+## 0.6.0 - October 15, 2018
+- Pick up new decorator library version to fix a possible state corruption error.
+
 ## 0.5.3 - July 9, 2018
 - Disable formatting in html that contains a style block. There is an annoying bug that may corrupt the html when running format on these blocks. Better to disable formatting in them for now. 
 

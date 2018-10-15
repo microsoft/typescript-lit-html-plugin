@@ -54,6 +54,7 @@ class HtmlPlugin {
         return decorateWithTemplateLanguageService(
             this._typescript,
             info.languageService,
+            info.project,
             htmlTemplateLanguageService,
             this.getTemplateSettings(config, this._virtualDocumentProvider),
             { logger });
