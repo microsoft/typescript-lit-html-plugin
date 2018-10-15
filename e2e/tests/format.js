@@ -55,7 +55,7 @@ describe('Format', () => {
             .then(response => {
                 assert.isTrue(response.success);
                 assert.strictEqual(response.body.length, 1);
-                assert.strictEqual(response.body[0].newText, '<div>\n  <img/>\n</div>');
+                assert.strictEqual(response.body[0].newText, '<div>\n  <img />\n</div>');
             });
     });
 

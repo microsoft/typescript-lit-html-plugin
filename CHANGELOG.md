@@ -1,6 +1,7 @@
 # Changelog
 
 ## 0.6.0 - October 15, 2018
+- Pick up new html service version with bug fixes and features like vendor info.
 - Pick up new decorator library version to fix a possible state corruption error.
 
 ## 0.5.3 - July 9, 2018
