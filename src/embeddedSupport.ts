@@ -31,8 +31,18 @@ interface EmbeddedRegion {
     languageId: string | undefined;
     start: number;
     end: number;
+    onlyPlaceholders: boolean;
     attributeValue?: boolean;
 }
+
+/**
+ * For template expressions, typescript-template-language-service-decorator
+ * will replace them with placeholder `x`'s, when the line does not consist only of
+ * expressions and whitespace.
+ *
+ * This regex can be used to check if CSS content contains only expressions and whitspace.
+ */
+const onlyPlaceholdersRegex = /^ *x{3,}( *x{3,})* *$/;
 
 export function getDocumentRegions(
     languageService: LanguageService,
@@ -58,6 +68,7 @@ export function getDocumentRegions(
                     languageId: 'css',
                     start: scanner.getTokenOffset(),
                     end: scanner.getTokenEnd(),
+                    onlyPlaceholders: onlyPlaceholdersRegex.test(scanner.getTokenText()),
                 });
                 break;
             case TokenType.Script:
@@ -65,6 +76,7 @@ export function getDocumentRegions(
                     languageId: languageIdFromType,
                     start: scanner.getTokenOffset(),
                     end: scanner.getTokenEnd(),
+                    onlyPlaceholders: onlyPlaceholdersRegex.test(scanner.getTokenText()),
                 });
                 break;
             case TokenType.AttributeName:
@@ -105,10 +117,12 @@ export function getDocumentRegions(
                             start++;
                             end--;
                         }
+                        const onlyPlaceholders = onlyPlaceholdersRegex.test(document.getText().slice(start, end));
                         regions.push({
                             languageId: attributeLanguageId,
                             start,
                             end,
+                            onlyPlaceholders,
                             attributeValue: true,
                         });
                     }
@@ -175,7 +189,8 @@ function getEmbeddedDocument(
                 lastSuffix,
                 getPrefix(c)
             );
-            result += oldContent.substring(c.start, c.end);
+            result += oldContent.substring(c.start, c.end)
+                .replace(onlyPlaceholdersRegex, match => ' '.repeat(match.length));
             currentPos = c.end;
             lastSuffix = getSuffix(c);
         }
@@ -197,7 +212,7 @@ function getEmbeddedDocument(
 }
 
 function getPrefix(c: EmbeddedRegion) {
-    if (c.attributeValue) {
+    if (c.attributeValue && !c.onlyPlaceholders) {
         switch (c.languageId) {
             case 'css':
                 return CSS_STYLE_RULE + '{';
@@ -206,7 +221,7 @@ function getPrefix(c: EmbeddedRegion) {
     return '';
 }
 function getSuffix(c: EmbeddedRegion) {
-    if (c.attributeValue) {
+    if (c.attributeValue && !c.onlyPlaceholders) {
         switch (c.languageId) {
             case 'css':
                 return '}';

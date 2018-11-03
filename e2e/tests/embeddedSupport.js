@@ -44,13 +44,69 @@ describe('Embedded Language Identification', () => {
     });
 });
 
+describe('Embedded Document Content', () => {
+    test('Substituted placeholder-like values in CSS', () => {
+        assertEmbeddedDocumentCssContent(
+            'html`<style>xxxxxxxxxxxxxxxxxx</style>`',
+            '                                       '
+        );
+        assertEmbeddedDocumentCssContent(
+            'html`<style>   xxxxxxxxxxx  </style>`',
+            '                                     '
+        );
+        assertEmbeddedDocumentCssContent(
+            'html`<style>xxxxxxxxxxxx  xxxxx</style>`',
+            '                                        '
+        );
+        assertEmbeddedDocumentCssContent(
+            'html`<div style="xxxxxxxxxxxxxxxxxxx"></div>`',
+            '                                             '
+        );
+        assertEmbeddedDocumentCssContent(
+            'html`<div style="xxx xxxxxx xxxxxxxx"></div>`',
+            '                                             '
+        );
+        assertEmbeddedDocumentCssContent(
+            'html`<style>xxx</style><div style=" xxx "></div>`',
+            '                                                 '
+        );
+    });
+
+    test('Untouched CSS document content', () => {
+        assertEmbeddedDocumentCssContent(
+            'html`<style>xx</style><div style="xx xxxxxxxx"></div>`',
+            '            xx                 __{xx xxxxxxxx}        '
+        );
+        assertEmbeddedDocumentCssContent(
+            'html`<style>body {color: red;} xxxxxxxxx</style>`',
+            '            body {color: red;} xxxxxxxxx         '
+        );
+        assertEmbeddedDocumentCssContent(
+            'html`<style>xxxxxxxxx body {color: red;}</style>`',
+            '            xxxxxxxxx body {color: red;}         '
+        );
+        assertEmbeddedDocumentCssContent(
+            'html`<div style="xxxxxxxxxx color:red;"></div>`',
+            '              __{xxxxxxxxxx color:red;}        '
+        );
+        assertEmbeddedDocumentCssContent(
+            'html`<div style="color:red; xxxxxxxxxxx"></div>`',
+            '              __{color:red; xxxxxxxxxxx}        '
+        );
+        assertEmbeddedDocumentCssContent(
+            'html`<div style="color:red; xxxxxxxxxxx font-size: 16px;"></div>`',
+            '              __{color:red; xxxxxxxxxxx font-size: 16px;}        '
+        );
+    });
+});
+
 const htmlLanguageService = vscodeHtmlService.getLanguageService();
 
 function assertLanguageId(value, expectedLanguageId) {
     let offset = value.indexOf('|');
     value = value.substr(0, offset) + value.substr(offset + 1);
 
-    let document = vscodeTypes.TextDocument.create('test://test/test.html', 'html', 0, value);
+    let document = createDocument(value);
 
     let position = document.positionAt(offset);
 
@@ -58,4 +114,16 @@ function assertLanguageId(value, expectedLanguageId) {
     let languageId = docRegions.getLanguageAtPosition(position);
 
     assert.equal(languageId, expectedLanguageId);
+}
+
+function assertEmbeddedDocumentCssContent(value, expectedValue) {
+    let document = createDocument(value);
+    let docRegions = embeddedSupport.getDocumentRegions(htmlLanguageService, document);
+    let cssDoc = docRegions.getEmbeddedDocument('css', false);
+
+    assert.equal(cssDoc.getText(), expectedValue);
+}
+
+function createDocument(value) {
+    return vscodeTypes.TextDocument.create('test://test/test.html', 'html', 0, value);
 }
