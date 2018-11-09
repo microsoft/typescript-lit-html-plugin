@@ -23,7 +23,7 @@ export class VirtualDocumentProvider implements StyledVirtualDocumentProvider {
             offsetAt: (p: vscode.Position) => {
                 return context.toOffset(p);
             },
-            lineCount: contents.split(/n/g).length + 1,
+            lineCount: contents.split(/\n/g).length + 1,
         };
     }
 
