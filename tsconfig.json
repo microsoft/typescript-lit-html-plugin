@@ -8,7 +8,9 @@
         "sourceMap": true,
         "outDir": "lib",
         "rootDir": "src",
-        "strict": true
+        "strict": true,
+        "noUnusedLocals": true,
+        "noUnusedParameters": true
     },
     "exclude": [
         "lib",

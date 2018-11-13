@@ -69,7 +69,7 @@ export default class HtmlTemplateLanguageService implements TemplateLanguageServ
         private readonly virtualDocumentProvider: VirtualDocumentProvider,
         private readonly htmlLanguageService: HtmlLanguageService,
         private readonly styledLanguageService: StyledTemplateLanguageService,
-        private readonly _logger: Logger // tslint:disable-line
+        _logger: Logger
     ) { }
 
     public getCompletionsAtPosition(
