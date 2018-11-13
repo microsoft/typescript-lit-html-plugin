@@ -39,7 +39,7 @@ Then add a `plugins` section to your [`tsconfig.json`](http://www.typescriptlang
 
 Finally, run the `Select TypeScript version` command in VS Code to switch to use the workspace version of TypeScript for VS Code's JavaScript and TypeScript language support. You can find more information about managing typescript versions [in the VS Code documentation](https://code.visualstudio.com/Docs/languages/typescript#_using-newer-typescript-versions).
 
-Also consider installing the [lit-html](https://marketplace.visualstudio.com/items?itemName=bierner.lit-html) extension to get stytax highlighting for lit-html template strings.
+Also consider installing the [lit-html](https://marketplace.visualstudio.com/items?itemName=bierner.lit-html) extension to get syntax highlighting for lit-html template strings.
 
 
 ### With Sublime
@@ -196,12 +196,17 @@ The plugin is written in [TypeScript](http://www.typescriptlang.org). The source
 npm run compile
 ```
 
-And then run the end to end tests with the `e2e` script:
+### Testing
+Run the test using the `e2e` script:
 
 ```bash
 (cd e2e && npm install)
 npm run e2e
 ```
+
+The repo also includes a vscode `launch.json` that you can use to debug the tests and the server. The `Mocha Tests` launch configuration starts the unit tests. Once a test is running and the TypeScript server for it has been started, use the `Attach To TS Server` launch configuration to debug the plugin itself. 
+
+### Submitting PRS
 
 You can submit bug fixes and features through [pull requests](https://help.github.com/articles/about-pull-requests/). To get started, first checkout a new feature branch on your local repo:
 

@@ -2,6 +2,8 @@ const { fork } = require('child_process');
 const path = require('path');
 const readline = require('readline');
 
+const debugPort = 5999;
+
 class TSServer {
     constructor(project) {
         const logfile = path.join(__dirname, 'log.txt');
@@ -13,6 +15,7 @@ class TSServer {
         ], {
                 cwd: path.join(__dirname, '..', project),
                 stdio: ['pipe', 'pipe', 'pipe', 'ipc'],
+                execArgv: [`--inspect=${debugPort}`],
             });
         this._exitPromise = new Promise((resolve, reject) => {
             server.on('exit', code => resolve(code));

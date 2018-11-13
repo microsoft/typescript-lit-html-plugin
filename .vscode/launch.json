@@ -5,17 +5,28 @@
   "version": "0.2.0",
   "configurations": [
     {
-      "name": "Attach to TS Server",
+      "type": "node",
+      "request": "attach",
+      "name": "Attach To TS Server",
+      "port": 5999
+    },
+    {
       "type": "node",
       "request": "launch",
-      "protocol": "inspector",
-      "port": 9222,
-      "sourceMaps": true,
-      "outFiles": ["./lib"],
-      "stopOnEntry": true,
-      "runtimeArgs": [
-          "--inspect-brk=5999" //an open port
-        ]
-      }
+      "name": "Mocha Tests",
+      "program": "${workspaceFolder}/node_modules/mocha/bin/_mocha",
+      "env": {
+        "TSS_DEBUG": "5999"
+      },
+      "args": [
+        "-u",
+        "tdd",
+        "--timeout",
+        "999999",
+        "--colors",
+        "${workspaceFolder}/e2e/tests"
+      ],
+      "internalConsoleOptions": "openOnSessionStart"
+    }
   ]
 }
