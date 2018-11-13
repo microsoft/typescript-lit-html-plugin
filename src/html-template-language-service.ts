@@ -368,7 +368,7 @@ function translateCompetionEntry(
 
     if (vsItem.textEdit) {
         entry.insertText = vsItem.textEdit.newText;
-        // entry.replacementSpan = toTsSpan(context, vsItem.textEdit.range);
+        entry.replacementSpan = toTsSpan(context, vsItem.textEdit.range);
     }
 
     return entry;
