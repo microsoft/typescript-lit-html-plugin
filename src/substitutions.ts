@@ -2,7 +2,7 @@ import { getTemplateSettings } from 'typescript-styled-plugin/lib/api';
 import { LanguageService } from 'vscode-html-languageservice';
 import { getDocumentRegions } from './embeddedSupport';
 import { VirtualDocumentProvider } from './virtual-document-provider';
-import { TemplateContext, Logger } from '../node_modules/typescript-template-language-service-decorator';
+import { TemplateContext } from '../node_modules/typescript-template-language-service-decorator';
 import * as ts from 'typescript/lib/tsserverlibrary';
 
 class NoopTemplateContext implements TemplateContext {
