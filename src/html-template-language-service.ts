@@ -80,7 +80,7 @@ export default class HtmlTemplateLanguageService implements TemplateLanguageServ
         if (entry.type === 'styled') {
             return entry.value;
         }
-        return translateCompletionItemsToCompletionInfo(this.typescript, entry.value);
+        return translateCompletionItemsToCompletionInfo(this.typescript, context, entry.value);
     }
 
     public getCompletionEntryDetails?(
@@ -182,12 +182,7 @@ export default class HtmlTemplateLanguageService implements TemplateLanguageServ
             wrapAttributes: 'auto',
         });
 
-        return edits.map(vsedit => {
-            return {
-                span: this.toTsSpan(context, vsedit.range),
-                newText: vsedit.newText,
-            };
-        });
+        return edits.map(vsedit => toTsTextChange(context, vsedit));
     }
 
     public getSignatureHelpItemsAtPosition(
@@ -234,19 +229,6 @@ export default class HtmlTemplateLanguageService implements TemplateLanguageServ
         return {
             start: context.toPosition(start),
             end: context.toPosition(end),
-        };
-    }
-
-    private toTsSpan(
-        context: TemplateContext,
-        range: vscode.Range
-    ): ts.TextSpan {
-        const editStart = context.toOffset(range.start);
-        const editEnd = context.toOffset(range.end);
-
-        return {
-            start: editStart,
-            length: editEnd - editStart,
         };
     }
 
@@ -347,13 +329,14 @@ export default class HtmlTemplateLanguageService implements TemplateLanguageServ
 
 function translateCompletionItemsToCompletionInfo(
     typescript: typeof ts,
+    context: TemplateContext,
     items: vscode.CompletionList
 ): ts.CompletionInfo {
     return {
         isGlobalCompletion: false,
         isMemberCompletion: false,
         isNewIdentifierLocation: false,
-        entries: items.items.map(x => translateCompetionEntry(typescript, x)),
+        entries: items.items.map(x => translateCompetionEntry(typescript, context, x)),
     };
 }
 
@@ -373,14 +356,22 @@ function translateCompletionItemsToCompletionEntryDetails(
 
 function translateCompetionEntry(
     typescript: typeof ts,
-    item: vscode.CompletionItem
+    context: TemplateContext,
+    vsItem: vscode.CompletionItem
 ): ts.CompletionEntry {
-    return {
-        name: item.label,
-        kindModifiers: '',
-        kind: item.kind ? translateionCompletionItemKind(typescript, item.kind) : typescript.ScriptElementKind.unknown,
+    const kind = vsItem.kind ? translateionCompletionItemKind(typescript, vsItem.kind) : typescript.ScriptElementKind.unknown;
+    const entry: ts.CompletionEntry = {
+        name: vsItem.label,
+        kind,
         sortText: '0',
     };
+
+    if (vsItem.textEdit) {
+        entry.insertText = vsItem.textEdit.newText;
+        // entry.replacementSpan = toTsSpan(context, vsItem.textEdit.range);
+    }
+
+    return entry;
 }
 
 function translateionCompletionItemKind(
@@ -442,4 +433,27 @@ function arePositionsEqual(
     right: ts.LineAndCharacter
 ): boolean {
     return left.line === right.line && left.character === right.character;
+}
+
+function toTsSpan(
+    context: TemplateContext,
+    range: vscode.Range
+): ts.TextSpan {
+    const editStart = context.toOffset(range.start);
+    const editEnd = context.toOffset(range.end);
+
+    return {
+        start: editStart,
+        length: editEnd - editStart,
+    };
+}
+
+function toTsTextChange(
+    context: TemplateContext,
+    vsedit: vscode.TextEdit
+) {
+    return {
+        span: toTsSpan(context, vsedit.range),
+        newText: vsedit.newText,
+    };
 }

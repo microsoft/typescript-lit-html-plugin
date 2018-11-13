@@ -35,6 +35,13 @@ describe('HTML Completions', () => {
         assert.isFalse(completionsResponse.body.some(item => item.name === 'div'));
         assert.isFalse(completionsResponse.body.some(item => item.name === 'main'));
     });
+
+    it('should return edit that closes > #25', async () => {
+        const completionsResponse = await makeSingleCompletionsRequest('const q = html`<a></`', { offset: 20, line: 1 });
+        const entry = completionsResponse.body.find(item => item.name === '/a');
+        assert.isOk(entry);
+        assert.strictEqual(entry.insertText, '/a>');
+    });
 });
 
 describe('CSS Completions', () => {
