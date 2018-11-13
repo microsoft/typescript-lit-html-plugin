@@ -221,6 +221,19 @@ export default class HtmlTemplateLanguageService implements TemplateLanguageServ
         return this.styledLanguageService.getCodeFixesAtPosition(context, start, end, errorCodes, format);
     }
 
+    public getReferencesAtPosition(
+        context: TemplateContext,
+        position: ts.LineAndCharacter
+    ): ts.ReferenceEntry[] | undefined {
+        const document = this.virtualDocumentProvider.createVirtualDocument(context);
+        const htmlDoc = this.htmlLanguageService.parseHTMLDocument(document);
+        const highlights = this.htmlLanguageService.findDocumentHighlights(document, position, htmlDoc);
+        return highlights.map(highlight => ({
+            fileName: context.fileName,
+            textSpan: toTsSpan(context, highlight.range),
+        } as ts.ReferenceEntry));
+    }
+
     private toVsRange(
         context: TemplateContext,
         start: number,
