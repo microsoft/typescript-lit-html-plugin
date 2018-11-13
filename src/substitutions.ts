@@ -68,5 +68,5 @@ export function getSubstitutions(
         .map(x => x.span);
 
     const settings = getTemplateSettings({} as any);
-    return settings.getSubstitutions(templateString, cssSpans);
+    return settings.getSubstitutions!(templateString, cssSpans);
 }

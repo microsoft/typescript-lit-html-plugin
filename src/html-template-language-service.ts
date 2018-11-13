@@ -90,7 +90,7 @@ export default class HtmlTemplateLanguageService implements TemplateLanguageServ
     ): ts.CompletionEntryDetails {
         const entry = this.getCompletionItems(context, position);
         if (entry.type === 'styled') {
-            return this.styledLanguageService.getCompletionEntryDetails(context, position, name);
+            return this.styledLanguageService.getCompletionEntryDetails!(context, position, name);
         }
 
         const item = entry.value.items.find(x => x.label === name);
@@ -119,7 +119,7 @@ export default class HtmlTemplateLanguageService implements TemplateLanguageServ
             case 'html':
                 const htmlDoc = this.htmlLanguageService.parseHTMLDocument(document);
                 const hover = this.htmlLanguageService.doHover(document, position, htmlDoc);
-                return this.translateHover(hover, position, context);
+                return hover ? this.translateHover(hover, position, context) : undefined;
 
             case 'css':
                 return this.styledLanguageService.getQuickInfoAtPosition(context, position);
@@ -175,7 +175,7 @@ export default class HtmlTemplateLanguageService implements TemplateLanguageServ
             contentUnformatted: 'pre,code,textarea',
             indentInnerHtml: false,
             preserveNewLines: true,
-            maxPreserveNewLines: null,
+            maxPreserveNewLines: undefined,
             indentHandlebars: false,
             endWithNewline: false,
             extraLiners: 'head, body, /html',
@@ -188,7 +188,7 @@ export default class HtmlTemplateLanguageService implements TemplateLanguageServ
     public getSignatureHelpItemsAtPosition(
         _context: TemplateContext,
         _position: ts.LineAndCharacter
-    ) {
+    ): ts.SignatureHelpItems | undefined {
         // Html does not support sig help
         return undefined;
     }
