@@ -1,5 +1,8 @@
 # Changelog
 
+## 0.7.1 - November 13, 2018
+- Fix tag highlighting when using TS 3.1+.
+
 ## 0.7.0 - November 13, 2018
 - Fix some false positive reporting for styles. Thanks @csvn!
 - Tag matching highlighting. Requires VS Code 1.30+
