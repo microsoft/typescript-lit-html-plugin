@@ -13,6 +13,8 @@ import HtmlTemplateLanguageService from './html-template-language-service';
 import { getSubstitutions } from './substitutions';
 import { CssDocumentProvider, VirtualDocumentProvider } from './virtual-document-provider';
 
+const litHtmlPluginMarker = Symbol('__litHtmlPluginMarker__');
+
 class LanguageServiceLogger implements Logger {
     constructor(
         private readonly info: ts.server.PluginCreateInfo
@@ -34,6 +36,11 @@ class HtmlPlugin {
     ) { }
 
     public create(info: ts.server.PluginCreateInfo): ts.LanguageService {
+        if ((info.languageService as any)[litHtmlPluginMarker]) {
+            // Already decorated
+            return info.languageService;
+        }
+
         const logger = new LanguageServiceLogger(info);
         this._config.update(info.config);
 
@@ -52,13 +59,16 @@ class HtmlPlugin {
             styledLanguageService,
             logger);
 
-        return decorateWithTemplateLanguageService(
+        const languageService = decorateWithTemplateLanguageService(
             this._typescript,
             info.languageService,
             info.project,
             htmlTemplateLanguageService,
             this.getTemplateSettings(this._config, this._virtualDocumentProvider),
             { logger });
+
+        (languageService as any)[litHtmlPluginMarker] = true;
+        return languageService;
     }
 
     public onConfigurationChanged(config: any) {
