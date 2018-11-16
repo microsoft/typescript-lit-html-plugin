@@ -234,6 +234,22 @@ export default class HtmlTemplateLanguageService implements TemplateLanguageServ
         } as ts.ReferenceEntry));
     }
 
+    public getJsxClosingTagAtPosition(
+        context: TemplateContext,
+        position: ts.LineAndCharacter
+    ): ts.JsxClosingTagInfo | undefined {
+        const document = this.virtualDocumentProvider.createVirtualDocument(context);
+        const htmlDocument = this.htmlLanguageService.parseHTMLDocument(document);
+        const tagComplete = this.htmlLanguageService.doTagComplete(document, position, htmlDocument)
+        if (!tagComplete) {
+            return undefined;
+        }
+        // Html returns completions with snippet placeholders. Strip these out.
+        return {
+            newText: tagComplete.replace(/\$\d/g, '')
+        };
+    }
+
     private toVsRange(
         context: TemplateContext,
         start: number,
