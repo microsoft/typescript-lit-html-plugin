@@ -17,7 +17,9 @@ TypeScript server plugin that adds intellisense for [lit-html](https://github.co
 This plugin requires TypeScript 2.4 or later. It can provide intellisense in both JavaScript and TypeScript files within any editor that uses TypeScript to power their language features. This includes [VS Code](https://code.visualstudio.com), [Sublime with the TypeScript plugin](https://github.com/Microsoft/TypeScript-Sublime-Plugin), [Atom with the TypeScript plugin](https://atom.io/packages/atom-typescript), [Visual Studio](https://www.visualstudio.com), and others. 
 
 ### With VS Code
-To use this plugin with VS Code, first install the plugin and a copy of TypeScript in your workspace:
+The simplest way to use this plugin is through the [lit-html](https://marketplace.visualstudio.com/items?itemName=bierner.lit-html) extension. This extension automatically enables the plugin, and also adds syntax highlighting for lit-html template strings and synchronization of settings between VS Code and the plugin.
+
+To use a specific version of this plugin with VS Code, first install the plugin and a copy of TypeScript in your workspace:
 
 ```bash
 npm install --save-dev typescript-lit-html-plugin typescript
@@ -38,8 +40,6 @@ Then add a `plugins` section to your [`tsconfig.json`](http://www.typescriptlang
 ```
 
 Finally, run the `Select TypeScript version` command in VS Code to switch to use the workspace version of TypeScript for VS Code's JavaScript and TypeScript language support. You can find more information about managing typescript versions [in the VS Code documentation](https://code.visualstudio.com/Docs/languages/typescript#_using-newer-typescript-versions).
-
-Also consider installing the [lit-html](https://marketplace.visualstudio.com/items?itemName=bierner.lit-html) extension to get syntax highlighting for lit-html template strings.
 
 
 ### With Sublime
@@ -96,7 +96,7 @@ Then add a `plugins` section to your [`tsconfig.json`](http://www.typescriptlang
 }
 ```
 
-To get sytnax highlighting for lit-html strings in Atom, consider installing the [language-babel](https://atom.io/packages/language-babel) extension.
+To get syntax highlighting for lit-html strings in Atom, consider installing the [language-babel](https://atom.io/packages/language-babel) extension.
 
 
 ### With Visual Studio
@@ -126,6 +126,10 @@ Then reload your project to make sure the plugin has been loaded properly. Note 
 
 
 ## Configuration
+
+You can configure the behavior of this plugin in `plugins` section of in your `tsconfig` or `jsconfig`.
+
+If you are using [lit-html](https://marketplace.visualstudio.com/items?itemName=bierner.lit-html) extension for VS Code, you can configure these settings in the editor settings instead of using a `tsconfig` or `jsconfig`.
 
 ### Tags
 This plugin adds html IntelliSense to any template literal [tagged](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Template_literals) with `html` or `raw`:

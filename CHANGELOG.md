@@ -1,5 +1,8 @@
 # Changelog
 
+## 0.8.0 - November 16, 2018
+- Allow editors to configure plugin. Requires TS 3.1.4+ and editor support.
+
 ## 0.7.1 - November 13, 2018
 - Fix tag highlighting when using TS 3.1+.
 
