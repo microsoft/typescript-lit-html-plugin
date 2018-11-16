@@ -8,10 +8,13 @@ TypeScript server plugin that adds intellisense for [lit-html](https://github.co
 
 **Features**
 
-- IntelliSense for html tags and attributes
-- Quick info hovers on tags
-- Formatting support
-- Works with literal html strings that contain placeholders
+- IntelliSense for html tags and attributes.
+- Quick info hovers on tags.
+- Formatting support.
+- Auto closing tags.
+- Folding html.
+- CSS completions in style blocks.
+- Works with literal html strings that contain placeholders.
 
 ## Usage
 This plugin requires TypeScript 2.4 or later. It can provide intellisense in both JavaScript and TypeScript files within any editor that uses TypeScript to power their language features. This includes [VS Code](https://code.visualstudio.com), [Sublime with the TypeScript plugin](https://github.com/Microsoft/TypeScript-Sublime-Plugin), [Atom with the TypeScript plugin](https://atom.io/packages/atom-typescript), [Visual Studio](https://www.visualstudio.com), and others. 
