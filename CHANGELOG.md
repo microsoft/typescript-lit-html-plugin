@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.9.0 - November 16, 2018
+- Add auto closing tags.
+- Prevent potential double decoration of a language service.
+
 ## 0.8.0 - November 16, 2018
 - Allow editors to configure plugin. Requires TS 3.1.4+ and editor support.
 
