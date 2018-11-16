@@ -161,7 +161,7 @@ You can enable IntelliSense for other tag names by configuring `"tags"`:
 ```
 
 ### Formatting
-The plugin formats html code by default. You can disable this by setting `"format.emabled": false`
+The plugin formats html code by default. You can disable this by setting `"format.enabled": false`
 
 ```json
 {
