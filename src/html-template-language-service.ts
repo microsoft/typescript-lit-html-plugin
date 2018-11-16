@@ -8,7 +8,7 @@ import { Logger, TemplateContext, TemplateLanguageService } from 'typescript-tem
 import * as ts from 'typescript/lib/tsserverlibrary';
 import { FoldingRange, LanguageService as HtmlLanguageService } from 'vscode-html-languageservice';
 import * as vscode from 'vscode-languageserver-types';
-import { TsHtmlPluginConfiguration } from './configuration';
+import { Configuration } from './configuration';
 import { getDocumentRegions } from './embeddedSupport';
 import { VirtualDocumentProvider } from './virtual-document-provider';
 
@@ -65,7 +65,7 @@ export default class HtmlTemplateLanguageService implements TemplateLanguageServ
 
     constructor(
         private readonly typescript: typeof ts,
-        private readonly configuration: TsHtmlPluginConfiguration,
+        private readonly configuration: Configuration,
         private readonly virtualDocumentProvider: VirtualDocumentProvider,
         private readonly htmlLanguageService: HtmlLanguageService,
         private readonly styledLanguageService: StyledTemplateLanguageService,

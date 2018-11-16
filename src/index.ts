@@ -8,7 +8,7 @@ import { decorateWithTemplateLanguageService, Logger, TemplateSettings } from 't
 import * as ts from 'typescript/lib/tsserverlibrary';
 import { getLanguageService, LanguageService as HtmlLanguageService } from 'vscode-html-languageservice';
 import { pluginName } from './config';
-import { loadConfiguration, TsHtmlPluginConfiguration } from './configuration';
+import { Configuration } from './configuration';
 import HtmlTemplateLanguageService from './html-template-language-service';
 import { getSubstitutions } from './substitutions';
 import { CssDocumentProvider, VirtualDocumentProvider } from './virtual-document-provider';
@@ -27,6 +27,7 @@ class HtmlPlugin {
     private readonly _virtualDocumentProvider = new VirtualDocumentProvider();
 
     private _htmlLanguageService?: HtmlLanguageService;
+    private _config = new Configuration();
 
     public constructor(
         private readonly _typescript: typeof ts
@@ -34,9 +35,9 @@ class HtmlPlugin {
 
     public create(info: ts.server.PluginCreateInfo): ts.LanguageService {
         const logger = new LanguageServiceLogger(info);
-        const config = loadConfiguration(info.config);
+        this._config.update(info.config);
 
-        logger.log('config: ' + JSON.stringify(config));
+        logger.log('config: ' + JSON.stringify(this._config));
 
         const styledLanguageService = new StyledTemplateLanguageService(
             this._typescript, {} as any,
@@ -45,7 +46,7 @@ class HtmlPlugin {
 
         const htmlTemplateLanguageService = new HtmlTemplateLanguageService(
             this._typescript,
-            config,
+            this._config,
             this._virtualDocumentProvider,
             this.htmlLanguageService,
             styledLanguageService,
@@ -56,8 +57,12 @@ class HtmlPlugin {
             info.languageService,
             info.project,
             htmlTemplateLanguageService,
-            this.getTemplateSettings(config, this._virtualDocumentProvider),
+            this.getTemplateSettings(this._config, this._virtualDocumentProvider),
             { logger });
+    }
+
+    public onConfigurationChanged(config: any) {
+        this._config.update(config);
     }
 
     private get htmlLanguageService(): HtmlLanguageService {
@@ -68,11 +73,11 @@ class HtmlPlugin {
     }
 
     private getTemplateSettings(
-        config: TsHtmlPluginConfiguration,
+        config: Configuration,
         provider: VirtualDocumentProvider
     ): TemplateSettings {
         return {
-            tags: config.tags,
+            get tags() { return config.tags; } ,
             enableForStringWithSubstitutions: true,
             getSubstitutions: (templateString, spans): string => {
                 return getSubstitutions(this._typescript, this.htmlLanguageService, provider, templateString, spans);
