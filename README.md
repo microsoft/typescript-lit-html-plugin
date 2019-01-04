@@ -103,7 +103,7 @@ To get syntax highlighting for lit-html strings in Atom, consider installing the
 
 
 ### With Visual Studio
-This plugin works [Visual Studio 2017](https://www.visualstudio.com) using the TypeScript 2.5+ SDK.
+This plugin works [Visual Studio 2017 15.8+](https://www.visualstudio.com) using the TypeScript 2.5+ SDK.
 
 First install the plugin in your project:
 
