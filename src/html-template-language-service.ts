@@ -275,25 +275,23 @@ export default class HtmlTemplateLanguageService implements TemplateLanguageServ
         const languageId = documentRegions.getLanguageAtPosition(position);
 
         switch (languageId) {
-            case 'html':
-                {
-                    const htmlDoc = this.htmlLanguageService.parseHTMLDocument(document);
-                    const htmlCompletions: HtmlCachedCompletionList = {
-                        type: 'html',
-                        value: this.htmlLanguageService.doComplete(document, position, htmlDoc) || emptyCompletionList,
-                    };
-                    this._completionsCache.updateCached(context, position, htmlCompletions);
-                    return htmlCompletions;
-                }
-            case 'css':
-                {
-                    const styledCompletions: StyledCachedCompletionList = {
-                        type: 'styled',
-                        value: this.styledLanguageService.getCompletionsAtPosition(context, position),
-                    };
-                    this._completionsCache.updateCached(context, position, styledCompletions);
-                    return styledCompletions;
-                }
+            case 'html': {
+                const htmlDoc = this.htmlLanguageService.parseHTMLDocument(document);
+                const htmlCompletions: HtmlCachedCompletionList = {
+                    type: 'html',
+                    value: this.htmlLanguageService.doComplete(document, position, htmlDoc) || emptyCompletionList,
+                };
+                this._completionsCache.updateCached(context, position, htmlCompletions);
+                return htmlCompletions;
+            }
+            case 'css': {
+                const styledCompletions: StyledCachedCompletionList = {
+                    type: 'styled',
+                    value: this.styledLanguageService.getCompletionsAtPosition(context, position),
+                };
+                this._completionsCache.updateCached(context, position, styledCompletions);
+                return styledCompletions;
+            }
         }
 
         const completions: HtmlCachedCompletionList = {
