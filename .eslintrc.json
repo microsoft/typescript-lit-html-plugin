@@ -21,30 +21,14 @@
     "SharedArrayBuffer": "readonly"
   },
   "rules": {
-    "@typescript-eslint/require-await": "off"
+    "@typescript-eslint/require-await": "off",
+    "@typescript-eslint/explicit-function-return-type": "warn"
   },
   "overrides": [
     {
       "files": "**/*.js",
       "rules": {
         "@typescript-eslint/explicit-function-return-type": "off"
-      }
-    },
-    {
-      "files": ["**/__tests__/*.ts", "*.test.ts"],
-      "plugins": ["jest"],
-      "extends": ["plugin:jest/recommended"],
-      "env": {
-        "jest": true,
-        "jest/globals": true,
-        "browser": true
-      },
-      "rules": {
-        "@typescript-eslint/no-unused-vars": "warn",
-        "@typescript-eslint/ban-ts-ignore": "off",
-        "import/order": "off", // may interfere with mocking,
-        "max-nested-callbacks": "off",
-        "max-lines": "off"
       }
     }
   ]

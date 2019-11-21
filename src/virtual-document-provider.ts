@@ -9,7 +9,7 @@ import { getDocumentRegions } from './embeddedSupport';
 export class VirtualDocumentProvider implements StyledVirtualDocumentProvider {
     public createVirtualDocument(
         context: TemplateContext,
-        useRawText: boolean = false
+        useRawText = false
     ): vscode.TextDocument {
         const contents = useRawText ? context.rawText : context.text;
         return {

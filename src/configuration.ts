@@ -2,34 +2,34 @@
 // Licensed under the MIT License.
 
 interface FormatConfig {
-    readonly enabled: boolean;
+  readonly enabled: boolean;
 }
 
 interface TsHtmlPluginConfiguration {
-    readonly tags: ReadonlyArray<string>;
-    readonly format: FormatConfig;
+  readonly tags: ReadonlyArray<string>;
+  readonly format: FormatConfig;
 }
 
 const defaultConfiguration: TsHtmlPluginConfiguration = {
-    tags: ["mjml"],
-    format: {
-        enabled: true
-    }
+  tags: ["mjml"],
+  format: {
+    enabled: true
+  }
 };
 
 export class Configuration {
-    private _format = defaultConfiguration.format;
-    private _tags = defaultConfiguration.tags;
+  private _format = defaultConfiguration.format;
+  private _tags = defaultConfiguration.tags;
 
-    public update(config: any) {
-        this._format = { ...defaultConfiguration.format, ...config.format };
-        this._tags = config.tags || defaultConfiguration.tags;
-    }
+  public update(config?: Partial<TsHtmlPluginConfiguration>) {
+    this._format = { ...defaultConfiguration.format, ...config?.format };
+    this._tags = config?.tags ?? defaultConfiguration.tags;
+  }
 
-    public get format(): FormatConfig {
-        return this._format;
-    }
-    public get tags(): ReadonlyArray<string> {
-        return this._tags;
-    }
+  public get format(): FormatConfig {
+    return this._format;
+  }
+  public get tags(): ReadonlyArray<string> {
+    return this._tags;
+  }
 }
