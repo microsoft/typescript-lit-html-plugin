@@ -11,10 +11,10 @@ interface TsHtmlPluginConfiguration {
 }
 
 const defaultConfiguration: TsHtmlPluginConfiguration = {
-    tags: ['html', 'raw'],
+    tags: ["mjml"],
     format: {
-        enabled: true,
-    },
+        enabled: true
+    }
 };
 
 export class Configuration {
@@ -22,10 +22,14 @@ export class Configuration {
     private _tags = defaultConfiguration.tags;
 
     public update(config: any) {
-        this._format = Object.assign({}, defaultConfiguration.format, config.format || {});
+        this._format = { ...defaultConfiguration.format, ...config.format };
         this._tags = config.tags || defaultConfiguration.tags;
     }
 
-    public get format(): FormatConfig { return this._format; }
-    public get tags(): ReadonlyArray<string> { return this._tags; }
+    public get format(): FormatConfig {
+        return this._format;
+    }
+    public get tags(): ReadonlyArray<string> {
+        return this._tags;
+    }
 }

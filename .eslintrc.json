@@ -1,0 +1,51 @@
+{
+  "parser": "@typescript-eslint/parser",
+  "parserOptions": {
+    "ecmaVersion": 2020,
+    "project": "./tsconfig.json"
+  },
+  "plugins": ["@typescript-eslint"],
+  "env": {
+    "es6": true
+  },
+  "extends": [
+    "eslint:recommended",
+    "plugin:@typescript-eslint/eslint-recommended",
+    "plugin:@typescript-eslint/recommended",
+    "plugin:@typescript-eslint/recommended-requiring-type-checking",
+    "prettier",
+    "prettier/@typescript-eslint"
+  ],
+  "globals": {
+    "Atomics": "readonly",
+    "SharedArrayBuffer": "readonly"
+  },
+  "rules": {
+    "@typescript-eslint/require-await": "off"
+  },
+  "overrides": [
+    {
+      "files": "**/*.js",
+      "rules": {
+        "@typescript-eslint/explicit-function-return-type": "off"
+      }
+    },
+    {
+      "files": ["**/__tests__/*.ts", "*.test.ts"],
+      "plugins": ["jest"],
+      "extends": ["plugin:jest/recommended"],
+      "env": {
+        "jest": true,
+        "jest/globals": true,
+        "browser": true
+      },
+      "rules": {
+        "@typescript-eslint/no-unused-vars": "warn",
+        "@typescript-eslint/ban-ts-ignore": "off",
+        "import/order": "off", // may interfere with mocking,
+        "max-nested-callbacks": "off",
+        "max-lines": "off"
+      }
+    }
+  ]
+}

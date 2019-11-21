@@ -1,4 +1,4 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-export const pluginName = 'ts-lit-html-plugin';
+export const pluginName = 'ts-mjml-plugin';

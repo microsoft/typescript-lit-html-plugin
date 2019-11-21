@@ -13,7 +13,7 @@ import HtmlTemplateLanguageService from './html-template-language-service';
 import { getSubstitutions } from './substitutions';
 import { CssDocumentProvider, VirtualDocumentProvider } from './virtual-document-provider';
 
-const litHtmlPluginMarker = Symbol('__litHtmlPluginMarker__');
+const mjmlPluginMarker = Symbol('__mjmlPluginMarker__');
 
 class LanguageServiceLogger implements Logger {
     constructor(
@@ -36,7 +36,7 @@ class HtmlPlugin {
     ) { }
 
     public create(info: ts.server.PluginCreateInfo): ts.LanguageService {
-        if ((info.languageService as any)[litHtmlPluginMarker]) {
+        if ((info.languageService as any)[mjmlPluginMarker]) {
             // Already decorated
             return info.languageService;
         }
@@ -67,7 +67,7 @@ class HtmlPlugin {
             this.getTemplateSettings(this._config, this._virtualDocumentProvider),
             { logger });
 
-        (languageService as any)[litHtmlPluginMarker] = true;
+        (languageService as any)[mjmlPluginMarker] = true;
         return languageService;
     }
 
@@ -87,7 +87,7 @@ class HtmlPlugin {
         provider: VirtualDocumentProvider
     ): TemplateSettings {
         return {
-            get tags() { return config.tags; } ,
+            get tags() { return config.tags; },
             enableForStringWithSubstitutions: true,
             getSubstitutions: (templateString, spans): string => {
                 return getSubstitutions(this._typescript, this.htmlLanguageService, provider, templateString, spans);

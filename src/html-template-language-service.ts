@@ -145,7 +145,7 @@ export default class HtmlTemplateLanguageService implements TemplateLanguageServ
         // The best fix would be to add `style` to `contentUnformatted` but
         // https://github.com/Microsoft/vscode-html-languageservice/issues/29 is causing problems and I'm not sure how
         // to work around it well
-        if (context.text.match(/<style/g)) {
+        if (context.text.match(/<(mjml-)?style/g)) {
             return [];
         }
 
@@ -172,14 +172,14 @@ export default class HtmlTemplateLanguageService implements TemplateLanguageServ
             insertSpaces: !!settings.convertTabsToSpaces,
             wrapLineLength: 120,
             unformatted: '',
-            contentUnformatted: 'pre,code,textarea',
-            indentInnerHtml: false,
+            contentUnformatted: 'pre,code,textarea,mjml-raw',
+            indentInnerHtml: true,
             preserveNewLines: true,
-            maxPreserveNewLines: undefined,
+            maxPreserveNewLines: 2,
             indentHandlebars: false,
             endWithNewline: false,
-            extraLiners: 'head, body, /html',
-            wrapAttributes: 'auto',
+            extraLiners: 'mj-body, mj-head, mj-include, /mjml',
+            wrapAttributes: 'force',
         });
 
         return edits.map(vsedit => toTsTextChange(context, vsedit));
