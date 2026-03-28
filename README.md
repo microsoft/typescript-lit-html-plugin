@@ -1,5 +1,8 @@
 # TypeScript lit-html Plugin
 
+> [!WARNING]
+> This project is now deprecated and will not work at all with TypeScript 7.0+
+
 TypeScript server plugin that adds intellisense for [lit-html](https://github.com/PolymerLabs/lit-html) template strings
 
 ![](documentation/preview.gif)
